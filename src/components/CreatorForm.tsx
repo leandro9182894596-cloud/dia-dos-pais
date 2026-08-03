@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo, type ChangeEvent } from "react";
+import { useState, useRef, useCallback, memo, type ChangeEvent } from "react";
 import {
   compressImage,
   saveHomenagem,
@@ -56,8 +56,8 @@ const PhotoItem = memo(function PhotoItem({
               id={`caption-${foto.id}`}
               name={`caption-${foto.id}`}
               type="text"
-              value={foto.caption}
-              onChange={(e) => onCaptionChange(foto.id, e.target.value)}
+              defaultValue={foto.caption}
+              onBlur={(e) => onCaptionChange(foto.id, e.target.value)}
               placeholder="Ex: Nosso primeiro encontro"
               className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose font-medium pointer-events-auto select-text cursor-text relative z-10"
             />
@@ -71,8 +71,8 @@ const PhotoItem = memo(function PhotoItem({
               id={`msg-${foto.id}`}
               name={`msg-${foto.id}`}
               rows={2}
-              value={foto.mensagem || ""}
-              onChange={(e) => onMensagemChange(foto.id, e.target.value)}
+              defaultValue={foto.mensagem || ""}
+              onBlur={(e) => onMensagemChange(foto.id, e.target.value)}
               placeholder="Escreva uma mensagem ou lembrança para esta foto..."
               className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose leading-relaxed pointer-events-auto select-text cursor-text relative z-10"
             />
@@ -84,17 +84,22 @@ const PhotoItem = memo(function PhotoItem({
 });
 
 export function CreatorForm() {
-  const [clientName, setClientName] = useState("");
-  const [partnerName, setPartnerName] = useState("");
-  const [startDate, setStartDate] = useState("2025-09-06");
-  const [startTime, setStartTime] = useState("00:00");
-  const [letterBody, setLetterBody] = useState(DEFAULT_LETTER);
+  // Input references for 100% native fast typing without React re-renders on keystrokes
+  const clientNameRef = useRef<HTMLInputElement>(null);
+  const partnerNameRef = useRef<HTMLInputElement>(null);
+  const startDateRef = useRef<HTMLInputElement>(null);
+  const startTimeRef = useRef<HTMLInputElement>(null);
+  const letterBodyRef = useRef<HTMLTextAreaElement>(null);
+
   const [photos, setPhotos] = useState<HomenagemFoto[]>([]);
   const [musicUrl, setMusicUrl] = useState<string | undefined>(undefined);
   const [musicFileName, setMusicFileName] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  // Preview state
+  const [previewData, setPreviewData] = useState<HomenagemData | null>(null);
+  const [partnerNameForShare, setPartnerNameForShare] = useState<string>("");
 
   const handlePhotoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -162,10 +167,16 @@ export function CreatorForm() {
   }, []);
 
   const getFormData = (): Omit<HomenagemData, "id" | "createdAt"> => {
+    const clientName = clientNameRef.current?.value.trim() || "Você";
+    const partnerName = partnerNameRef.current?.value.trim() || "Seu Amor";
+    const startDate = startDateRef.current?.value || "2025-09-06";
+    const startTime = startTimeRef.current?.value || "00:00";
+    const letterBody = letterBodyRef.current?.value || DEFAULT_LETTER;
+
     const fullStartDate = `${startDate}T${startTime}:00`;
     return {
-      clientName: clientName.trim() || "Você",
-      partnerName: partnerName.trim() || "Seu Amor",
+      clientName,
+      partnerName,
       startDate: fullStartDate,
       letterBody,
       photos,
@@ -174,15 +185,27 @@ export function CreatorForm() {
   };
 
   const handleOpenPreview = () => {
-    if (!clientName.trim() || !partnerName.trim()) {
+    const clientName = clientNameRef.current?.value.trim();
+    const partnerName = partnerNameRef.current?.value.trim();
+
+    if (!clientName || !partnerName) {
       alert("Por favor, informe o seu nome e o nome do seu parceiro(a) antes de visualizar.");
       return;
     }
-    setShowPreviewModal(true);
+
+    const payload = getFormData();
+    setPreviewData({
+      id: "preview-temp",
+      createdAt: Date.now(),
+      ...payload,
+    });
   };
 
   const handleGenerateLink = () => {
-    if (!clientName.trim() || !partnerName.trim()) {
+    const clientName = clientNameRef.current?.value.trim();
+    const partnerName = partnerNameRef.current?.value.trim();
+
+    if (!clientName || !partnerName) {
       alert("Por favor, informe o seu nome e o nome do seu parceiro(a).");
       return;
     }
@@ -191,28 +214,10 @@ export function CreatorForm() {
     const saved = saveHomenagem(payload);
 
     const generatedUrl = `${window.location.origin}/homenagem/${saved.id}`;
+    setPartnerNameForShare(partnerName);
     setCreatedUrl(generatedUrl);
-    setShowPreviewModal(false);
+    setPreviewData(null);
   };
-
-  const previewHomenagemData = useMemo<HomenagemData>(() => {
-    if (!showPreviewModal) {
-      return {
-        id: "preview-temp",
-        createdAt: Date.now(),
-        clientName: "",
-        partnerName: "",
-        startDate: "",
-        letterBody: "",
-        photos: [],
-      };
-    }
-    return {
-      id: "preview-temp",
-      createdAt: Date.now(),
-      ...getFormData(),
-    };
-  }, [showPreviewModal, clientName, partnerName, startDate, startTime, letterBody, photos, musicUrl]);
 
   return (
     <div className="relative z-10 mx-auto max-w-3xl rounded-3xl bg-card p-6 shadow-2xl border border-wine/10 sm:p-10 pointer-events-auto">
@@ -238,12 +243,12 @@ export function CreatorForm() {
             <input
               id="clientName"
               name="clientName"
+              ref={clientNameRef}
               type="text"
               required
               autoComplete="off"
+              defaultValue=""
               placeholder="Ex: Leandro"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
               className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
@@ -255,12 +260,12 @@ export function CreatorForm() {
             <input
               id="partnerName"
               name="partnerName"
+              ref={partnerNameRef}
               type="text"
               required
               autoComplete="off"
+              defaultValue=""
               placeholder="Ex: Wanda"
-              value={partnerName}
-              onChange={(e) => setPartnerName(e.target.value)}
               className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
@@ -275,10 +280,10 @@ export function CreatorForm() {
             <input
               id="startDate"
               name="startDate"
+              ref={startDateRef}
               type="date"
               required
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              defaultValue="2025-09-06"
               className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
@@ -290,9 +295,9 @@ export function CreatorForm() {
             <input
               id="startTime"
               name="startTime"
+              ref={startTimeRef}
               type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              defaultValue="00:00"
               className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
@@ -306,9 +311,9 @@ export function CreatorForm() {
           <textarea
             id="letterBody"
             name="letterBody"
+            ref={letterBodyRef}
             rows={5}
-            value={letterBody}
-            onChange={(e) => setLetterBody(e.target.value)}
+            defaultValue={DEFAULT_LETTER}
             className="w-full rounded-2xl border border-input bg-background p-4 text-base leading-relaxed text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
           />
         </div>
@@ -419,7 +424,7 @@ export function CreatorForm() {
       </form>
 
       {/* Full-Screen Live Interactive Preview Modal */}
-      {showPreviewModal && (
+      {previewData && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/90 animate-fade-in pointer-events-auto">
           {/* Top Bar inside Preview Modal */}
           <div className="sticky top-0 z-50 flex items-center justify-between bg-wine/95 px-6 py-3 text-white shadow-xl backdrop-blur-md border-b border-gold/30">
@@ -433,7 +438,7 @@ export function CreatorForm() {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setShowPreviewModal(false)}
+                onClick={() => setPreviewData(null)}
                 className="rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white hover:bg-white/30 transition-colors cursor-pointer"
               >
                 ✏️ Editar
@@ -449,8 +454,8 @@ export function CreatorForm() {
             </div>
           </div>
 
-          {/* Interactive Homenagem View (isPreview = true para nao carregar a GiftReveal no modo previa) */}
-          <HomenagemView data={previewHomenagemData} isPreview={true} />
+          {/* Interactive Homenagem View (isPreview = true para performance maxima na previa) */}
+          <HomenagemView data={previewData} isPreview={true} />
         </div>
       )}
 
@@ -458,7 +463,7 @@ export function CreatorForm() {
       {createdUrl && (
         <ShareModal
           url={createdUrl}
-          partnerName={partnerName || "seu parceiro"}
+          partnerName={partnerNameForShare || "seu parceiro"}
           onClose={() => setCreatedUrl(null)}
         />
       )}

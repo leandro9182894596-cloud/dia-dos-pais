@@ -31,7 +31,7 @@ export function ShareModal({ url, partnerName, onClose }: ShareModalProps) {
   };
 
   const whatsappMessage = encodeURIComponent(
-    `Fiz uma surpresa romântica especial para você, ${partnerName}! ♥\nAcesse antes que expire em 24 horas:\n${url}`
+    `Fiz uma homenagem especial para você, ${partnerName}! 🏅\nAcesse antes que expire em 24 horas:\n${url}`
   );
 
   const whatsappUrl = `https://api.whatsapp.com/send?text=${whatsappMessage}`;
@@ -49,11 +49,11 @@ export function ShareModal({ url, partnerName, onClose }: ShareModalProps) {
 
         <div className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose/10 text-3xl">
-            🎁
+            🏅
           </div>
 
           <h2 className="font-serif text-2xl font-bold text-foreground sm:text-3xl">
-            Sua Homenagem Está Pronta!
+            Homenagem para o Pai Está Pronta!
           </h2>
 
           <p className="mt-2 text-sm text-muted-foreground">
@@ -94,7 +94,7 @@ export function ShareModal({ url, partnerName, onClose }: ShareModalProps) {
             rel="noopener noreferrer"
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3.5 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-95"
           >
-            <span>💬</span> Compartilhar no WhatsApp
+            <span>💬</span> Compartilhar no WhatsApp para o Pai
           </a>
 
           <a

@@ -1,1 +1,3 @@
-/api/asaas/* https://www.asaas.com/api/v3/:splat 200
+# Cloudflare Pages Redirects File
+# SPA routing is managed via wrangler.toml [assets] not_found_handling = "single-page-application"
+# External API Proxy is managed via functions/api/asaas/[[path]].ts

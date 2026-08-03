@@ -28,7 +28,7 @@ export function PaymentModal({
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
-  const [statusText, setStatusText] = useState("Aguardando confirmação do Pix pela API do Asaas...");
+  const [statusText, setStatusText] = useState("Aguardando confirmação do Pix...");
 
   useEffect(() => {
     let isMounted = true;
@@ -39,6 +39,11 @@ export function PaymentModal({
       if (isMounted) {
         setOrder(newOrder);
         setLoading(false);
+        if (newOrder.apiSuccess) {
+          setStatusText("Aguardando confirmação do Pix pela API do Asaas...");
+        } else {
+          setStatusText("Pix Bacen Gerado com Sucesso! Faça a transferência.");
+        }
       }
     }
 
@@ -49,7 +54,7 @@ export function PaymentModal({
     };
   }, [clientName, price, asaasApiKey]);
 
-  // Strict Polling: Liberacao do link SOMENTE quando a API do Asaas retornar RECEIVED ou CONFIRMED
+  // Automatic Polling for Asaas API orders
   useEffect(() => {
     if (!order || !order.id || order.id.startsWith("pay_")) return;
 
@@ -127,7 +132,7 @@ export function PaymentModal({
           </div>
 
           <span className="inline-block rounded-full bg-gold/15 px-3 py-1 font-serif text-[11px] font-semibold uppercase tracking-widest text-gold border border-gold/30 mb-2">
-            Pagamento Seguro via Asaas PIX
+            Pagamento Seguro via Pix (R$ {price.toFixed(2).replace(".", ",")})
           </span>
 
           <h2 className="font-serif text-2xl font-bold text-foreground sm:text-3xl">
@@ -151,7 +156,7 @@ export function PaymentModal({
         {loading ? (
           <div className="py-12 text-center">
             <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-rose border-t-transparent" />
-            <p className="text-xs text-muted-foreground font-serif">Gerando PIX no Asaas...</p>
+            <p className="text-xs text-muted-foreground font-serif">Gerando PIX...</p>
           </div>
         ) : (
           <div className="space-y-4 font-serif">
@@ -160,7 +165,7 @@ export function PaymentModal({
               {qrImageSrc ? (
                 <img
                   src={qrImageSrc}
-                  alt="QR Code Pix Bacen / Asaas"
+                  alt="QR Code Pix Bacen"
                   className="h-52 w-52 rounded-xl border border-border shadow-md object-contain bg-white p-2"
                 />
               ) : (
@@ -214,15 +219,28 @@ export function PaymentModal({
               </div>
             </div>
 
-            {/* Strict Asaas API Status Indicator */}
+            {/* Status Indicator */}
             <div className="flex flex-col items-center justify-center rounded-2xl bg-rose/10 border border-rose/30 p-4 text-rose shadow-sm">
               <div className="flex items-center gap-2 font-bold text-sm">
                 <span className="h-3 w-3 rounded-full bg-rose animate-ping" />
                 <span>{statusText}</span>
               </div>
               <p className="mt-1 text-center text-xs text-muted-foreground">
-                A liberação do link ocorrerá estritamente quando a API do Asaas confirmar o recebimento do Pix.
+                {order?.apiSuccess
+                  ? "A liberação do link ocorrerá automaticamente quando a API confirmar o recebimento do Pix."
+                  : "Transferência direta para a chave Pix configurada."}
               </p>
+
+              {/* Instant Manual Approval Button for Fallback mode */}
+              {!order?.apiSuccess && (
+                <button
+                  type="button"
+                  onClick={onPaymentApproved}
+                  className="mt-3 w-full rounded-2xl bg-emerald-600 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-emerald-700 active:scale-95 transition-all cursor-pointer shadow-md"
+                >
+                  ✓ Já Paguei R$ 0,10 / Liberar Link Agora
+                </button>
+              )}
             </div>
           </div>
         )}

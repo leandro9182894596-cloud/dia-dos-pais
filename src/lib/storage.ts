@@ -40,7 +40,6 @@ export function saveHomenagem(data: Omit<HomenagemData, "id" | "createdAt">): Ho
 }
 
 export function getHomenagem(id: string): { data: HomenagemData | null; isExpired: boolean; remainingMs: number } {
-  // First check localStorage
   const raw = localStorage.getItem(`homenagem_${id}`);
   let data: HomenagemData | null = null;
 
@@ -52,7 +51,6 @@ export function getHomenagem(id: string): { data: HomenagemData | null; isExpire
     }
   }
 
-  // If not found in localStorage, attempt decoding from payload if id is a compressed payload
   if (!data) {
     data = decodeHomenagemPayload(id);
   }
@@ -80,10 +78,6 @@ export function getTimeRemainingParts(remainingMs: number) {
   return { hours, minutes, seconds };
 }
 
-/**
- * Encodes homage data into a URL-safe Base64 payload so it can be shared via URL hash/query
- * even across different browsers or devices without a database!
- */
 export function encodeHomenagemPayload(data: HomenagemData): string {
   try {
     const json = JSON.stringify(data);
@@ -107,7 +101,7 @@ export function decodeHomenagemPayload(encodedPayload: string): HomenagemData | 
  * Resizes and compresses uploaded photo using HTML Canvas
  * to ensure fast rendering and lightweight storage.
  */
-export function compressImage(file: File, maxWidth = 900, quality = 0.8): Promise<string> {
+export function compressImage(file: File, maxWidth = 700, quality = 0.65): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {

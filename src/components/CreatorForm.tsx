@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useState, useMemo, memo, type ChangeEvent } from "react";
 import {
   compressImage,
   saveHomenagem,
@@ -9,6 +9,75 @@ import { ShareModal } from "./ShareModal";
 import { HomenagemView } from "./HomenagemView";
 
 const DEFAULT_LETTER = `Desde o dia em que nos conhecemos, a minha vida ganhou uma nova cor. Você chegou como quem não avisa, mas como quem estava destinado a ficar. Cada dia ao seu lado me ensina que o amor não é apenas um sentimento, é uma escolha que eu faço todos os dias — e eu escolho você.\n\nObrigado por ser minha parceira, minha amiga, minha paz e o meu maior amor. Que venham muitos mais dias, meses e anos de nós dois.`;
+
+interface PhotoItemProps {
+  foto: HomenagemFoto;
+  index: number;
+  onRemove: (id: string) => void;
+  onCaptionChange: (id: string, caption: string) => void;
+  onMensagemChange: (id: string, mensagem: string) => void;
+}
+
+const PhotoItem = memo(function PhotoItem({
+  foto,
+  index,
+  onRemove,
+  onCaptionChange,
+  onMensagemChange,
+}: PhotoItemProps) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-sm flex flex-col justify-between">
+      <div>
+        <div className="aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted relative">
+          <img
+            src={foto.src}
+            alt={foto.caption}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+          <button
+            type="button"
+            onClick={() => onRemove(foto.id)}
+            className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-xs font-bold text-white hover:bg-red-600 transition-colors shadow-md"
+          >
+            ✕
+          </button>
+          <span className="absolute bottom-2 left-2 rounded-md bg-wine/80 px-2 py-0.5 text-[10px] text-cream font-medium">
+            Foto #{index + 1}
+          </span>
+        </div>
+
+        <div className="mt-3 space-y-2">
+          <div>
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+              Título / Legenda:
+            </label>
+            <input
+              type="text"
+              value={foto.caption}
+              onChange={(e) => onCaptionChange(foto.id, e.target.value)}
+              placeholder="Ex: Nosso primeiro encontro"
+              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-rose font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+              Mensagem desta foto:
+            </label>
+            <textarea
+              rows={2}
+              value={foto.mensagem || ""}
+              onChange={(e) => onMensagemChange(foto.id, e.target.value)}
+              placeholder="Escreva uma mensagem ou lembrança para esta foto..."
+              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-rose leading-relaxed"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export function CreatorForm() {
   const [clientName, setClientName] = useState("");
@@ -122,11 +191,24 @@ export function CreatorForm() {
     setShowPreviewModal(false);
   };
 
-  const previewHomenagemData: HomenagemData = {
-    id: "preview-temp",
-    createdAt: Date.now(),
-    ...getFormData(),
-  };
+  const previewHomenagemData = useMemo<HomenagemData>(() => {
+    if (!showPreviewModal) {
+      return {
+        id: "preview-temp",
+        createdAt: Date.now(),
+        clientName: "",
+        partnerName: "",
+        startDate: "",
+        letterBody: "",
+        photos: [],
+      };
+    }
+    return {
+      id: "preview-temp",
+      createdAt: Date.now(),
+      ...getFormData(),
+    };
+  }, [showPreviewModal, clientName, partnerName, startDate, startTime, letterBody, photos, musicUrl]);
 
   return (
     <div className="mx-auto max-w-3xl rounded-3xl bg-card p-6 shadow-2xl border border-wine/10 sm:p-10">
@@ -283,62 +365,18 @@ export function CreatorForm() {
             </label>
           )}
 
-          {/* Grid de fotos adicionadas com Legenda e Mensagem personalizada */}
+          {/* Grid de fotos adicionadas com componentes memoizados */}
           {photos.length > 0 && (
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {photos.map((foto, index) => (
-                <div
+                <PhotoItem
                   key={foto.id}
-                  className="relative overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-sm flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted relative">
-                      <img
-                        src={foto.src}
-                        alt={foto.caption}
-                        className="h-full w-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemovePhoto(foto.id)}
-                        className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-xs font-bold text-white hover:bg-red-600 transition-colors shadow-md"
-                      >
-                        ✕
-                      </button>
-                      <span className="absolute bottom-2 left-2 rounded-md bg-wine/80 px-2 py-0.5 text-[10px] text-cream font-medium">
-                        Foto #{index + 1}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 space-y-2">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                          Título / Legenda:
-                        </label>
-                        <input
-                          type="text"
-                          value={foto.caption}
-                          onChange={(e) => handleCaptionChange(foto.id, e.target.value)}
-                          placeholder="Ex: Nosso primeiro encontro"
-                          className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-rose font-medium"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                          Mensagem desta foto:
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={foto.mensagem || ""}
-                          onChange={(e) => handleMensagemChange(foto.id, e.target.value)}
-                          placeholder="Escreva uma mensagem ou lembrança para esta foto..."
-                          className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-rose leading-relaxed"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  foto={foto}
+                  index={index}
+                  onRemove={handleRemovePhoto}
+                  onCaptionChange={handleCaptionChange}
+                  onMensagemChange={handleMensagemChange}
+                />
               ))}
             </div>
           )}

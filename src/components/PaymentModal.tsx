@@ -110,6 +110,10 @@ export function PaymentModal({
     onPaymentApproved();
   };
 
+  const qrImageSrc = order?.pixQrCodeBase64
+    ? `data:image/png;base64,${order.pixQrCodeBase64}`
+    : order?.pixQrCodeUrl;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm animate-fade-in pointer-events-auto overflow-y-auto py-10">
       <div className="relative w-full max-w-lg rounded-3xl bg-card p-6 sm:p-8 shadow-2xl border border-gold/40 my-auto">
@@ -155,40 +159,46 @@ export function PaymentModal({
           </div>
         ) : (
           <div className="space-y-4 font-serif">
-            {/* Simulated / Real QR Code */}
-            <div className="flex flex-col items-center justify-center rounded-2xl bg-secondary/50 p-4 border border-border">
-              {order?.pixQrCodeBase64 ? (
+            {/* Live QR Code image rendering */}
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-4 border border-border shadow-inner">
+              {qrImageSrc ? (
                 <img
-                  src={`data:image/png;base64,${order.pixQrCodeBase64}`}
-                  alt="QR Code Pix Asaas"
-                  className="h-44 w-44 rounded-xl border border-border shadow-md"
+                  src={qrImageSrc}
+                  alt="QR Code Pix Bacen / Asaas"
+                  className="h-52 w-52 rounded-xl border border-border shadow-md object-contain bg-white p-2"
                 />
               ) : (
-                /* Fallback Graphic */
-                <div className="flex h-44 w-44 flex-col items-center justify-center rounded-xl bg-white p-3 shadow-inner border border-muted">
-                  <div className="grid grid-cols-4 gap-1.5 w-full h-full p-2 bg-black/5 rounded-lg border border-dashed border-black/20">
-                    <div className="bg-wine rounded"></div>
-                    <div className="bg-gold rounded"></div>
-                    <div className="bg-wine rounded"></div>
-                    <div className="bg-[#25D366] rounded"></div>
-                    <div className="bg-[#25D366] rounded"></div>
-                    <div className="bg-wine rounded"></div>
-                    <div className="bg-gold rounded"></div>
-                    <div className="bg-wine rounded"></div>
-                    <div className="bg-wine rounded"></div>
-                    <div className="bg-gold rounded"></div>
-                    <div className="bg-wine rounded"></div>
-                    <div className="bg-[#25D366] rounded"></div>
-                  </div>
-                  <span className="text-[10px] font-bold text-wine mt-1 uppercase tracking-wider">
-                    PIX ASAAS
-                  </span>
+                <div className="flex h-52 w-52 items-center justify-center bg-gray-100 rounded-xl">
+                  <span className="text-xs text-muted-foreground">Gerando QR Code...</span>
                 </div>
               )}
 
-              <p className="mt-2 text-center text-xs text-muted-foreground">
+              <p className="mt-3 text-center text-xs font-semibold text-gray-700">
                 Abra o app do seu banco e escaneie o QR Code acima
               </p>
+            </div>
+
+            {/* Pix Copia e Cola Oficial Bacen */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-foreground">
+                Pix Copia e Cola Oficial (R$ 0,10):
+              </label>
+
+              <div className="flex items-center gap-2 rounded-2xl bg-background p-2 border border-input shadow-sm">
+                <input
+                  type="text"
+                  readOnly
+                  value={order?.pixCopiaECola || DEFAULT_PIX_KEY}
+                  className="w-full bg-transparent px-3 text-xs font-mono text-foreground focus:outline-none select-all truncate font-semibold"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyPixPayload}
+                  className="shrink-0 rounded-xl bg-wine px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold hover:bg-wine/90 active:scale-95 transition-all cursor-pointer shadow-sm"
+                >
+                  {copied ? "Copiado! ✓" : "Copiar Pix"}
+                </button>
+              </div>
             </div>
 
             {/* Chave Pix Estática em Destaque */}
@@ -204,29 +214,6 @@ export function PaymentModal({
                   className="shrink-0 rounded-lg bg-rose px-2.5 py-1 text-[10px] text-white hover:opacity-90 font-sans cursor-pointer"
                 >
                   {copiedKey ? "Copiado! ✓" : "Copiar Chave"}
-                </button>
-              </div>
-            </div>
-
-            {/* Pix Copia e Cola */}
-            <div>
-              <label className="mb-1 block text-xs font-medium text-foreground">
-                Pix Copia e Cola (Asaas):
-              </label>
-
-              <div className="flex items-center gap-2 rounded-2xl bg-background p-2 border border-input shadow-sm">
-                <input
-                  type="text"
-                  readOnly
-                  value={order?.pixCopiaECola || DEFAULT_PIX_KEY}
-                  className="w-full bg-transparent px-3 text-xs font-mono text-muted-foreground focus:outline-none select-all truncate"
-                />
-                <button
-                  type="button"
-                  onClick={handleCopyPixPayload}
-                  className="shrink-0 rounded-xl bg-wine px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold hover:bg-wine/90 active:scale-95 transition-all cursor-pointer"
-                >
-                  {copied ? "Copiado! ✓" : "Copiar"}
                 </button>
               </div>
             </div>

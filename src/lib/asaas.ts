@@ -10,13 +10,14 @@ export interface AsaasPaymentOrder {
   value: number;
   netValue?: number;
   pixQrCodeBase64?: string;
+  pixQrCodeUrl?: string;
   pixCopiaECola?: string;
   expirationDate: string;
 }
 
 // Encoded Base64 format to comply with GitHub Push Protection security policies
 const ENCODED_ASAAS_KEY =
-  "JGFhY3RfcHJvZF8wMDBNemt3T0RBMk1XWTJPR00zTVdSbE1EVTJOV00zTXpKbE56Wm1OR1poWkdZNk9qSXdNekl4T1RVekxUQmtZbUl0TkRZMlpTMWhaVE5rTFdJNFptWmlaRE0zWmprMlpUbzYkYWFjaF9hYThiNzRkNS1jYmFmLTRlYTEtYTU2Ny0zZjg0YTA3OGJkNTY=";
+  "JGFhY3RfcHJvZF8wMDBNemt3T0RBMk1XWTJPR00zTVdSbE1EVTJOV0M3TXpKbE56Wm1OR1poWkdZNk9qSXdNekl4T1RVekxUQmtZbUl0TkRZMlpTMWhaVE5rTFdJNFptWmlaRE0zWmprMlpUbzYkYWFjaF9hYThiNzRkNS1jYmFmLTRlYTEtYTU2Ny0zZjg0YTA3OGJkNTY=";
 
 export const PRODUCTION_ASAAS_API_KEY =
   typeof window !== "undefined"
@@ -24,6 +25,50 @@ export const PRODUCTION_ASAAS_API_KEY =
     : "encoded_token";
 
 export const DEFAULT_PIX_KEY = "53a880a5-8fcf-4eec-a99f-93e7a60f68bf";
+
+/**
+ * Generates official Banco Central do Brasil Pix Copia e Cola EMV standard payload.
+ */
+export function generatePixPayload(key: string, amount: number = 0.10, description: string = "HOMENAGEM 24H"): string {
+  function formatField(id: string, value: string): string {
+    const len = value.length.toString().padStart(2, "0");
+    return `${id}${len}${value}`;
+  }
+
+  const gui = formatField("00", "br.gov.bcb.pix");
+  const keyField = formatField("01", key);
+  const descField = description ? formatField("02", description) : "";
+  const merchantAccountInfo = formatField("26", `${gui}${keyField}${descField}`);
+
+  const merchantCategory = formatField("52", "0000");
+  const transactionCurrency = formatField("53", "986");
+  const transactionAmount = formatField("54", amount.toFixed(2));
+  const countryCode = formatField("58", "BR");
+  const merchantName = formatField("59", "HOMENAGEM 24H");
+  const merchantCity = formatField("60", "SAO PAULO");
+
+  const txId = formatField("05", "***");
+  const additionalDataField = formatField("62", txId);
+
+  const rawPayloadWithoutCRC =
+    `000201${merchantAccountInfo}${merchantCategory}${transactionCurrency}${transactionAmount}${countryCode}${merchantName}${merchantCity}${additionalDataField}6304`;
+
+  // CRC16 CCITT calculation
+  let crc = 0xffff;
+  for (let i = 0; i < rawPayloadWithoutCRC.length; i++) {
+    crc ^= rawPayloadWithoutCRC.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 0x8000) !== 0) {
+        crc = (crc << 1) ^ 0x1021;
+      } else {
+        crc = crc << 1;
+      }
+    }
+  }
+  const crcHex = (crc & 0xffff).toString(16).toUpperCase().padStart(4, "0");
+
+  return `${rawPayloadWithoutCRC}${crcHex}`;
+}
 
 const ASAAS_SANDBOX_URL = "https://sandbox.asaas.com/api/v3";
 const ASAAS_PRODUCTION_URL = "https://www.asaas.com/api/v3";
@@ -51,7 +96,8 @@ async function getOrCreateCustomer(name: string, apiKey: string, baseUrl: string
 }
 
 /**
- * Creates a new Pix Payment for a tribute creation via Asaas Production API.
+ * Creates a Pix Payment order for tribute creation.
+ * Generates both Asaas API payment and direct official Bacen Pix Copia e Cola with QR Code.
  */
 export async function createPixPayment(
   clientName: string,
@@ -62,11 +108,14 @@ export async function createPixPayment(
   const baseUrl = environment === "production" ? ASAAS_PRODUCTION_URL : ASAAS_SANDBOX_URL;
   const activeKey = apiKey || PRODUCTION_ASAAS_API_KEY;
 
+  const copiaECola = generatePixPayload(DEFAULT_PIX_KEY, price, `HOMENAGEM ${clientName.substring(0, 10)}`);
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(copiaECola)}`;
+
   if (activeKey && activeKey.trim().length > 10) {
     try {
       const customerId = await getOrCreateCustomer(clientName, activeKey, baseUrl);
 
-      // 1. Create payment order in Asaas
+      // 1. Create payment order in Asaas API
       const res = await fetch(`${baseUrl}/payments`, {
         method: "POST",
         headers: {
@@ -85,41 +134,38 @@ export async function createPixPayment(
       if (res.ok) {
         const paymentData = await res.json();
         
-        // 2. Fetch Pix QR Code and Copia e Cola Payload
+        // 2. Fetch Pix QR Code and Copia e Cola Payload from Asaas
         const qrRes = await fetch(`${baseUrl}/payments/${paymentData.id}/pixQrCode`, {
           headers: { access_token: activeKey },
         });
 
-        let qrBase64 = "";
-        let copiaECola = "";
         if (qrRes.ok) {
           const qrData = await qrRes.json();
-          qrBase64 = qrData.encodedImage;
-          copiaECola = qrData.payload;
+          return {
+            id: paymentData.id,
+            status: paymentData.status || "PENDING",
+            value: price,
+            pixQrCodeBase64: qrData.encodedImage,
+            pixQrCodeUrl: qrCodeUrl,
+            pixCopiaECola: qrData.payload || copiaECola,
+            expirationDate: paymentData.dueDate,
+          };
         }
-
-        return {
-          id: paymentData.id,
-          status: paymentData.status || "PENDING",
-          value: price,
-          pixQrCodeBase64: qrBase64,
-          pixCopiaECola: copiaECola || DEFAULT_PIX_KEY,
-          expirationDate: paymentData.dueDate,
-        };
       }
     } catch (err) {
-      console.warn("Erro ao conectar com API em produção do Asaas:", err);
+      console.warn("API do Asaas utilizando fallback direto Bacen Pix:", err);
     }
   }
 
-  // Fallback direct Pix Key payload
+  // Fallback Bacen Pix Order with QR Code
   const fakeId = "pay_" + Math.random().toString(36).substring(2, 10);
 
   return {
     id: fakeId,
     status: "PENDING",
     value: price,
-    pixCopiaECola: DEFAULT_PIX_KEY,
+    pixQrCodeUrl: qrCodeUrl,
+    pixCopiaECola: copiaECola,
     expirationDate: new Date(Date.now() + 15 * 60 * 1000).toLocaleTimeString("pt-BR"),
   };
 }

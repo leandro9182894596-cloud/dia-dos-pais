@@ -449,8 +449,8 @@ export function CreatorForm() {
             </div>
           </div>
 
-          {/* Interactive Homenagem View */}
-          <HomenagemView data={previewHomenagemData} isPreview={false} />
+          {/* Interactive Homenagem View (isPreview = true para nao carregar a GiftReveal no modo previa) */}
+          <HomenagemView data={previewHomenagemData} isPreview={true} />
         </div>
       )}
 

@@ -30,13 +30,6 @@ export function GiftReveal({ partnerName = "Wanda", photos, onOpenGift }: GiftRe
     return () => clearTimeout(timer);
   }, [stage, index, listaMomentos.length]);
 
-  useEffect(() => {
-    document.body.style.overflow = stage === "done" ? "" : "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [stage]);
-
   if (stage === "done") return null;
 
   const momento = listaMomentos[index] ?? listaMomentos[0]!;
@@ -47,7 +40,6 @@ export function GiftReveal({ partnerName = "Wanda", photos, onOpenGift }: GiftRe
     setStage("opening");
     onOpenGift?.();
 
-    // After opening animation finishes (800ms), transition to slides
     setTimeout(() => {
       setStage("slides");
     }, 850);
@@ -59,8 +51,8 @@ export function GiftReveal({ partnerName = "Wanda", photos, onOpenGift }: GiftRe
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gradient-to-b from-[#5B0F14] via-[#2C070A] to-[#0D0204] px-5 py-6 font-serif text-white select-none overflow-hidden">
-      {/* Background Particles & Ambient Sparkles */}
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gradient-to-b from-[#5B0F14] via-[#2C070A] to-[#0D0204] px-5 py-6 font-serif text-white select-none overflow-y-auto">
+      {/* Background Particles */}
       <div className="absolute inset-0 pointer-events-none opacity-40">
         <div className="absolute top-1/4 left-10 h-2 w-2 rounded-full bg-gold animate-ping" />
         <div className="absolute top-1/3 right-16 h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
@@ -70,32 +62,25 @@ export function GiftReveal({ partnerName = "Wanda", photos, onOpenGift }: GiftRe
 
       {stage === "gift" || stage === "opening" ? (
         <div className="relative z-10 flex w-full max-w-xl flex-col items-center justify-center text-center animate-fade-in py-4">
-          {/* Header Tag */}
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.25em] text-[#D4AF37] backdrop-blur-md shadow-sm">
             <span>✨</span> PARA VOCÊ, {partnerName.toUpperCase()}
           </div>
 
-          {/* Main Title */}
           <h1 className="font-serif text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-lg">
             Um presente especial para você ❤️
           </h1>
 
-          {/* Subtitle */}
           <p className="mt-4 max-w-md text-base leading-relaxed text-white/75 sm:text-lg">
             Preparamos uma surpresa com muito carinho. Toque no presente para descobrir.
           </p>
 
-          {/* Seta animada apontando para a caixa */}
           <div className="mt-5 text-2xl text-[#D4AF37] animate-soft-bounce">
             ↓
           </div>
 
-          {/* 3D Floating Gift Box Area */}
           <div className="relative my-6 flex items-center justify-center">
-            {/* Glow iluminação suave atrás da caixa */}
             <div className="absolute -inset-10 rounded-full bg-gradient-to-tr from-[#C1121F]/40 via-[#D4AF37]/30 to-rose/30 blur-3xl animate-glow-pulse" />
 
-            {/* Gift Box Interactive Trigger */}
             <button
               type="button"
               onClick={handleGiftClick}
@@ -104,32 +89,21 @@ export function GiftReveal({ partnerName = "Wanda", photos, onOpenGift }: GiftRe
               className="group relative cursor-pointer outline-none transition-transform duration-500 hover:scale-105 active:scale-95"
             >
               <div className="relative flex h-52 w-52 sm:h-60 sm:w-60 items-center justify-center animate-float-smooth">
-                {/* Gift Lid */}
                 <div
                   className={`absolute top-0 z-20 h-16 w-56 sm:h-18 sm:w-64 rounded-xl bg-gradient-to-r from-[#C1121F] via-[#D4AF37]/20 to-[#8B0000] shadow-2xl border-b-2 border-gold/40 transition-all ${
                     stage === "opening" ? "animate-lid-open" : ""
                   }`}
                 >
-                  {/* Top Bow */}
                   <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center justify-center text-4xl drop-shadow-md">
                     🎀
                   </div>
-                  {/* Ribbon Vertical Ribbon Lid */}
                   <div className="absolute top-0 left-1/2 h-full w-8 -translate-x-1/2 bg-gradient-to-r from-[#D4AF37] via-[#FFF3B0] to-[#D4AF37] shadow-inner" />
                 </div>
 
-                {/* Gift Box Base */}
                 <div className="absolute bottom-0 z-10 h-40 w-52 sm:h-44 sm:w-60 overflow-hidden rounded-2xl bg-gradient-to-b from-[#C1121F] via-[#9B0A15] to-[#500000] shadow-2xl border border-gold/30">
-                  {/* Ribbon Vertical */}
                   <div className="absolute top-0 left-1/2 h-full w-8 -translate-x-1/2 bg-gradient-to-r from-[#D4AF37] via-[#FFF3B0] to-[#D4AF37] shadow-md" />
-
-                  {/* Ribbon Horizontal */}
                   <div className="absolute top-1/2 left-0 w-full h-8 -translate-y-1/2 bg-gradient-to-b from-[#D4AF37] via-[#FFF3B0] to-[#D4AF37] shadow-md" />
-
-                  {/* Ribbon Shine Effect passing every few seconds */}
                   <div className="absolute inset-0 w-12 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-ribbon-shine" />
-
-                  {/* Front Golden Badge */}
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-black/40 px-3 py-1 text-[11px] font-semibold text-gold border border-gold/40 backdrop-blur-sm">
                     <span>♥</span> TOQUE
                   </div>
@@ -138,13 +112,11 @@ export function GiftReveal({ partnerName = "Wanda", photos, onOpenGift }: GiftRe
             </button>
           </div>
 
-          {/* Pulsing Text */}
           <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2 text-xs font-semibold uppercase tracking-widest text-white/90 shadow-lg backdrop-blur-md animate-pulse border border-white/15">
             <span>🎁</span> Clique para abrir seu presente
           </div>
         </div>
       ) : (
-        /* Slides presentation after box opens */
         <div key={index} className="animate-fade-in flex w-full max-w-md flex-col items-center">
           <div className="w-full overflow-hidden rounded-3xl border border-gold/40 shadow-2xl shadow-black/70 bg-black/40">
             <img
@@ -179,7 +151,7 @@ export function GiftReveal({ partnerName = "Wanda", photos, onOpenGift }: GiftRe
           <button
             type="button"
             onClick={avancar}
-            className="mt-6 rounded-full bg-[#C1121F] px-8 py-3.5 text-sm font-semibold uppercase tracking-widest text-white shadow-xl transition-all hover:scale-105 active:scale-95 border border-gold/30"
+            className="mt-6 rounded-full bg-[#C1121F] px-8 py-3.5 text-sm font-semibold uppercase tracking-widest text-white shadow-xl transition-all hover:scale-105 active:scale-95 border border-gold/30 cursor-pointer"
           >
             {isLast ? "Ver nossa carta" : "Próxima"}
           </button>
@@ -187,7 +159,7 @@ export function GiftReveal({ partnerName = "Wanda", photos, onOpenGift }: GiftRe
           <button
             type="button"
             onClick={() => setStage("done")}
-            className="mt-3 text-xs uppercase tracking-widest text-white/50 underline-offset-4 hover:underline"
+            className="mt-3 text-xs uppercase tracking-widest text-white/50 underline-offset-4 hover:underline cursor-pointer"
           >
             Pular para a carta
           </button>

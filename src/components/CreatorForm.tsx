@@ -6,6 +6,7 @@ import {
   type HomenagemData,
 } from "../lib/storage";
 import { ShareModal } from "./ShareModal";
+import { PaymentModal } from "./PaymentModal";
 import { HomenagemView } from "./HomenagemView";
 
 const DEFAULT_LETTER = `Desde o dia em que nos conhecemos, a minha vida ganhou uma nova cor. Você chegou como quem não avisa, mas como quem estava destinado a ficar. Cada dia ao seu lado me ensina que o amor não é apenas um sentimento, é uma escolha que eu faço todos os dias — e eu escolho você.\n\nObrigado por ser minha parceira, minha amiga, minha paz e o meu maior amor. Que venham muitos mais dias, meses e anos de nós dois.`;
@@ -96,7 +97,9 @@ export function CreatorForm() {
   const [uploading, setUploading] = useState(false);
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
 
+  // Modais de Prévia e Pagamento
   const [previewData, setPreviewData] = useState<HomenagemData | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [partnerNameForShare, setPartnerNameForShare] = useState<string>("");
 
   const handlePhotoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -199,7 +202,8 @@ export function CreatorForm() {
     });
   };
 
-  const handleGenerateLink = () => {
+  // Abre a modal de checkout de pagamento do Asaas
+  const handleInitiateCheckout = () => {
     const clientName = clientNameRef.current?.value.trim();
     const partnerName = partnerNameRef.current?.value.trim();
 
@@ -208,13 +212,19 @@ export function CreatorForm() {
       return;
     }
 
+    setPartnerNameForShare(partnerName);
+    setPreviewData(null);
+    setShowPaymentModal(true);
+  };
+
+  // Executado quando o pagamento via Asaas Pix é confirmado ou simulado
+  const handlePaymentApproved = () => {
     const payload = getFormData();
     const saved = saveHomenagem(payload);
 
     const generatedUrl = `${window.location.origin}/homenagem/${saved.id}`;
-    setPartnerNameForShare(partnerName);
     setCreatedUrl(generatedUrl);
-    setPreviewData(null);
+    setShowPaymentModal(false);
   };
 
   return (
@@ -413,10 +423,10 @@ export function CreatorForm() {
 
           <button
             type="button"
-            onClick={handleGenerateLink}
+            onClick={handleInitiateCheckout}
             className="flex items-center justify-center gap-2 rounded-full bg-rose py-3.5 text-sm font-semibold uppercase tracking-wider text-rose-foreground shadow-xl transition-all hover:scale-[1.02] active:scale-95 cursor-pointer pointer-events-auto relative z-10"
           >
-            <span>✨</span> Gerar Link (Validade 24h)
+            <span>💳</span> Gerar Link via Pix (R$ 9,90)
           </button>
         </div>
       </form>
@@ -444,17 +454,27 @@ export function CreatorForm() {
 
               <button
                 type="button"
-                onClick={handleGenerateLink}
+                onClick={handleInitiateCheckout}
                 className="rounded-full bg-rose px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md hover:scale-105 transition-transform cursor-pointer"
               >
-                ✨ Confirmar & Gerar Link (24h)
+                💳 Pagar & Gerar Link (R$ 9,90)
               </button>
             </div>
           </div>
 
-          {/* Interactive Homenagem View (isPreview = false para exibir a experiencia completa do presente 3D + musica) */}
           <HomenagemView data={previewData} isPreview={false} />
         </div>
+      )}
+
+      {/* Payment Checkout Modal (Asaas Pix) */}
+      {showPaymentModal && (
+        <PaymentModal
+          clientName={clientNameRef.current?.value || "Cliente"}
+          partnerName={partnerNameForShare || "Parceiro(a)"}
+          price={9.90}
+          onPaymentApproved={handlePaymentApproved}
+          onClose={() => setShowPaymentModal(false)}
+        />
       )}
 
       {/* Share Modal when Link is generated */}

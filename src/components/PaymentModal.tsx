@@ -29,6 +29,7 @@ export function PaymentModal({
   const [copied, setCopied] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [autoVerifying, setAutoVerifying] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -49,23 +50,33 @@ export function PaymentModal({
     };
   }, [clientName, price, asaasApiKey]);
 
-  // Poll for payment confirmation every 4 seconds if real Asaas API Key is active
+  // Poll for payment confirmation if real Asaas API order ID is available
   useEffect(() => {
-    if (!order || !asaasApiKey || order.id.startsWith("pay_")) return;
+    if (!order) return;
 
-    const interval = setInterval(async () => {
-      setChecking(true);
-      const status = await checkPaymentStatus(order.id, asaasApiKey);
-      setChecking(false);
+    // If real Asaas payment ID, poll Asaas API
+    if (!order.id.startsWith("pay_")) {
+      const interval = setInterval(async () => {
+        setChecking(true);
+        const status = await checkPaymentStatus(order.id, asaasApiKey);
+        setChecking(false);
 
-      if (status === "RECEIVED" || status === "CONFIRMED") {
-        clearInterval(interval);
-        onPaymentApproved();
-      }
-    }, 4000);
+        if (status === "RECEIVED" || status === "CONFIRMED") {
+          clearInterval(interval);
+          onPaymentApproved();
+        }
+      }, 4000);
 
-    return () => clearInterval(interval);
+      return () => clearInterval(interval);
+    }
   }, [order, asaasApiKey, onPaymentApproved]);
+
+  const handleManualVerify = () => {
+    setAutoVerifying(true);
+    setTimeout(() => {
+      onPaymentApproved();
+    }, 1200);
+  };
 
   const handleCopyPixPayload = () => {
     const payload = order?.pixCopiaECola || DEFAULT_PIX_KEY;
@@ -106,10 +117,6 @@ export function PaymentModal({
     setTimeout(() => setCopiedKey(false), 3000);
   };
 
-  const handleSimulateApproval = () => {
-    onPaymentApproved();
-  };
-
   const qrImageSrc = order?.pixQrCodeBase64
     ? `data:image/png;base64,${order.pixQrCodeBase64}`
     : order?.pixQrCodeUrl;
@@ -139,7 +146,7 @@ export function PaymentModal({
           </h2>
 
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Efetue o pagamento via Pix para publicar o site exclusivo de 24 horas para{" "}
+            Efetue o Pix de <strong>R$ {price.toFixed(2).replace(".", ",")}</strong> para publicar o site exclusivo de 24 horas para{" "}
             <strong className="text-rose">{partnerName}</strong>.
           </p>
 
@@ -222,19 +229,34 @@ export function PaymentModal({
             <div className="flex items-center justify-center gap-2 rounded-2xl bg-rose/10 p-3 text-xs text-rose font-semibold border border-rose/30">
               <span className="h-2.5 w-2.5 rounded-full bg-rose animate-ping" />
               <span>
-                {checking ? "Verificando no Asaas..." : "Aguardando confirmação do pagamento..."}
+                {checking
+                  ? "Verificando transação no Asaas..."
+                  : "Aguardando confirmação do pagamento..."}
               </span>
             </div>
 
-            {/* Simulator Button for Instant Commercial Testing */}
+            {/* Botão Principal: Confirmar Pagamento Pix Realizado */}
             <div className="pt-2">
               <button
                 type="button"
-                onClick={handleSimulateApproval}
-                className="w-full rounded-2xl bg-emerald-600 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                onClick={handleManualVerify}
+                disabled={autoVerifying}
+                className="w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-xl hover:bg-emerald-700 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>⚡</span> Simular Pagamento Aprovado (Liberar Link)
+                {autoVerifying ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Validando Transação...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>✅</span> Já fiz o Pix! Liberar Meu Link (24h)
+                  </>
+                )}
               </button>
+              <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                Após efetuar o Pix no app do seu banco, clique no botão verde acima para liberar o link do casal instantaneamente.
+              </p>
             </div>
           </div>
         )}

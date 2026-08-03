@@ -1,10 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import heroImage from "../assets/hero-love.jpg";
-import moment1 from "../assets/moment-1.jpg";
-import moment2 from "../assets/moment-2.jpg";
-import moment3 from "../assets/moment-3.jpg";
+import { MusicPlayer } from "../components/MusicPlayer";
+import foto01 from "../assets/foto-01.jpg.asset.json";
+import foto02 from "../assets/foto-02.jpg.asset.json";
+import foto03 from "../assets/foto-03.jpg.asset.json";
+import foto04 from "../assets/foto-04.jpg.asset.json";
+import foto05 from "../assets/foto-05.jpg.asset.json";
+import foto06 from "../assets/foto-06.jpg.asset.json";
+import foto07 from "../assets/foto-07.jpg.asset.json";
+import fotoFamilia from "../assets/foto-familia.jpg.asset.json";
+
+const GALERIA = [
+  { src: foto03.url, alt: "Leandro e Wanda juntinhos", caption: "Nosso cantinho, nosso mundo" },
+  { src: foto05.url, alt: "Leandro e Wanda em uma festa à noite", caption: "Noites que viraram lembranças" },
+  { src: foto02.url, alt: "Leandro e Wanda no espelho", caption: "Sempre juntos, em cada reflexo" },
+  { src: foto07.url, alt: "Selfie de Leandro e Wanda sorrindo", caption: "Sorrisos que dizem tudo" },
+  { src: foto01.url, alt: "Leandro e Wanda ao ar livre", caption: "Passeios simples, felicidade enorme" },
+  { src: foto04.url, alt: "Leandro abraçando Wanda", caption: "Abraço que é o meu lugar favorito" },
+  { src: foto06.url, alt: "Leandro e Wanda em casa", caption: "O amor mora nos dias comuns" },
+  { src: fotoFamilia.url, alt: "Foto da família reunida", caption: "A família que o nosso amor abraça" },
+];
+
 
 const START_DATE = new Date("2025-09-06T00:00:00");
 
@@ -104,17 +121,17 @@ function Countdown() {
 function Index() {
   return (
     <main className="min-h-screen bg-background">
+      <MusicPlayer />
       {/* Hero */}
       <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src={heroImage}
-            alt="Leandro e Wanda ao pôr do sol"
-            width={1920}
-            height={1088}
+            src={foto05.url}
+            alt="Leandro e Wanda juntos"
             className="h-full w-full object-cover"
             fetchPriority="high"
           />
+
           <div className="absolute inset-0 bg-gradient-to-b from-wine/40 via-wine/20 to-background" />
         </div>
 
@@ -182,59 +199,32 @@ function Index() {
               Nossos momentos
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              Cada foto conta um pedacinho da nossa história. Envie as suas fotos para que eu possa substituir essas imagens pelos momentos reais de vocês.
+              Cada foto conta um pedacinho da nossa história — e a minha parte favorita é você.
             </p>
+
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <figure className="group overflow-hidden rounded-2xl bg-card shadow-md transition-transform duration-500 hover:-translate-y-1">
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={moment1}
-                  alt="Mãos dadas com alianças"
-                  width={1024}
-                  height={1024}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              </div>
-              <figcaption className="p-5 text-center font-serif text-foreground/80">
-                Promessas que se renovam a cada dia
-              </figcaption>
-            </figure>
-
-            <figure className="group overflow-hidden rounded-2xl bg-card shadow-md transition-transform duration-500 hover:-translate-y-1">
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={moment2}
-                  alt="Caminhada romântica na praia ao pôr do sol"
-                  width={1024}
-                  height={1024}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              </div>
-              <figcaption className="p-5 text-center font-serif text-foreground/80">
-                Caminhos que queremos percorrer juntos
-              </figcaption>
-            </figure>
-
-            <figure className="group overflow-hidden rounded-2xl bg-card shadow-md transition-transform duration-500 hover:-translate-y-1 sm:col-span-2 lg:col-span-1">
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={moment3}
-                  alt="Jantar romântico à luz de velas"
-                  width={1024}
-                  height={1024}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              </div>
-              <figcaption className="p-5 text-center font-serif text-foreground/80">
-                Encontros que viraram hábito de amar
-              </figcaption>
-            </figure>
+            {GALERIA.map((foto) => (
+              <figure
+                key={foto.src}
+                className="group overflow-hidden rounded-2xl bg-card shadow-md transition-transform duration-500 hover:-translate-y-1"
+              >
+                <div className="aspect-[3/4] overflow-hidden">
+                  <img
+                    src={foto.src}
+                    alt={foto.alt}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                </div>
+                <figcaption className="p-5 text-center font-serif text-foreground/80">
+                  {foto.caption}
+                </figcaption>
+              </figure>
+            ))}
           </div>
+
         </div>
       </section>
 

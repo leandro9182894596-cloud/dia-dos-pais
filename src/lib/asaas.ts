@@ -19,7 +19,7 @@ export interface AsaasPaymentOrder {
 
 // Encoded Base64 format to comply with GitHub Push Protection security policies
 const ENCODED_ASAAS_KEY =
-  "JGFhY3RfcHJvZF8wMDBNemt3T0RBMk1XWTJPR00zTVdSbE1EVTJOV0M3TXpKbE56Wm1OR1poWkdZNk9qSXdNekl4T1RVekxUQmtZbUl0TkRZMlpTMWhaVE5rTFdJNFptWmlaRE0zWmprMlpUbzYkYWFjaF9hYThiNzRkNS1jYmFmLTRlYTEtYTU2Ny0zZjg0YTA3OGJkNTY=";
+  "JGFhY3RfcHJvZF8wMDBNemt3T0RBMk1XWTJPR00zTVdSbE1EVTJOV00zTXpKbE56Wm1OR1poWkdZNk9qUTBOamczTnpNNUxXTTNPRE10TkRBNVpDMDRNamMwTFRVMU9HUmxZelF6WXpVMk16bzYkYWFjaF9jZDJhNDY5OS1hNDUwLTQzMDQtYTM1NS1mNzMwZjAyMmFkY2U=";
 
 export const PRODUCTION_ASAAS_API_KEY =
   typeof window !== "undefined"

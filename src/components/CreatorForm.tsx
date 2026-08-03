@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, type ChangeEvent } from "react";
+import { useState, useMemo, useCallback, memo, type ChangeEvent } from "react";
 import {
   compressImage,
   saveHomenagem,
@@ -57,7 +57,7 @@ const PhotoItem = memo(function PhotoItem({
               value={foto.caption}
               onChange={(e) => onCaptionChange(foto.id, e.target.value)}
               placeholder="Ex: Nosso primeiro encontro"
-              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-rose font-medium"
+              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose font-medium"
             />
           </div>
 
@@ -70,7 +70,7 @@ const PhotoItem = memo(function PhotoItem({
               value={foto.mensagem || ""}
               onChange={(e) => onMensagemChange(foto.id, e.target.value)}
               placeholder="Escreva uma mensagem ou lembrança para esta foto..."
-              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-rose leading-relaxed"
+              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose leading-relaxed"
             />
           </div>
         </div>
@@ -141,21 +141,21 @@ export function CreatorForm() {
     setMusicFileName(null);
   };
 
-  const handleRemovePhoto = (id: string) => {
+  const handleRemovePhoto = useCallback((id: string) => {
     setPhotos((prev) => prev.filter((p) => p.id !== id));
-  };
+  }, []);
 
-  const handleCaptionChange = (id: string, caption: string) => {
+  const handleCaptionChange = useCallback((id: string, caption: string) => {
     setPhotos((prev) =>
       prev.map((p) => (p.id === id ? { ...p, caption } : p))
     );
-  };
+  }, []);
 
-  const handleMensagemChange = (id: string, mensagem: string) => {
+  const handleMensagemChange = useCallback((id: string, mensagem: string) => {
     setPhotos((prev) =>
       prev.map((p) => (p.id === id ? { ...p, mensagem } : p))
     );
-  };
+  }, []);
 
   const getFormData = (): Omit<HomenagemData, "id" | "createdAt"> => {
     const fullStartDate = `${startDate}T${startTime}:00`;
@@ -224,7 +224,7 @@ export function CreatorForm() {
         </p>
       </div>
 
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-6 font-serif">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         {/* Nomes */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -237,7 +237,7 @@ export function CreatorForm() {
               placeholder="Ex: Leandro"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
             />
           </div>
 
@@ -251,7 +251,7 @@ export function CreatorForm() {
               placeholder="Ex: Wanda"
               value={partnerName}
               onChange={(e) => setPartnerName(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
             />
           </div>
         </div>
@@ -267,7 +267,7 @@ export function CreatorForm() {
               required
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
             />
           </div>
 
@@ -279,7 +279,7 @@ export function CreatorForm() {
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
             />
           </div>
         </div>
@@ -293,7 +293,7 @@ export function CreatorForm() {
             rows={5}
             value={letterBody}
             onChange={(e) => setLetterBody(e.target.value)}
-            className="w-full rounded-2xl border border-input bg-background p-4 text-base leading-relaxed text-foreground shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+            className="w-full rounded-2xl border border-input bg-background p-4 text-base leading-relaxed text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
           />
         </div>
 
@@ -383,11 +383,11 @@ export function CreatorForm() {
         </div>
 
         {/* Action Buttons: Preview and Generate Link */}
-        <div className="grid gap-3 sm:grid-cols-2 pt-2">
+        <div className="grid gap-3 sm:grid-cols-2 pt-2 font-serif">
           <button
             type="button"
             onClick={handleOpenPreview}
-            className="flex items-center justify-center gap-2 rounded-full border-2 border-rose bg-rose/10 py-3.5 font-serif text-sm font-semibold uppercase tracking-wider text-rose shadow-md transition-all hover:bg-rose/20 active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-full border-2 border-rose bg-rose/10 py-3.5 text-sm font-semibold uppercase tracking-wider text-rose shadow-md transition-all hover:bg-rose/20 active:scale-95"
           >
             <span>👁</span> Pré-visualizar Homenagem
           </button>
@@ -395,7 +395,7 @@ export function CreatorForm() {
           <button
             type="button"
             onClick={handleGenerateLink}
-            className="flex items-center justify-center gap-2 rounded-full bg-rose py-3.5 font-serif text-sm font-semibold uppercase tracking-wider text-rose-foreground shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-full bg-rose py-3.5 text-sm font-semibold uppercase tracking-wider text-rose-foreground shadow-xl transition-all hover:scale-[1.02] active:scale-95"
           >
             <span>✨</span> Gerar Link (Validade 24h)
           </button>

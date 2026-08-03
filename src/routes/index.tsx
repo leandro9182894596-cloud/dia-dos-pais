@@ -121,17 +121,17 @@ function Countdown() {
 function Index() {
   return (
     <main className="min-h-screen bg-background">
+      <MusicPlayer />
       {/* Hero */}
       <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src={heroImage}
-            alt="Leandro e Wanda ao pôr do sol"
-            width={1920}
-            height={1088}
+            src={foto05.url}
+            alt="Leandro e Wanda juntos"
             className="h-full w-full object-cover"
             fetchPriority="high"
           />
+
           <div className="absolute inset-0 bg-gradient-to-b from-wine/40 via-wine/20 to-background" />
         </div>
 

@@ -1,12 +1,10 @@
 [build]
-  command = "npm run build"
+  command = "npm run build && mkdir -p .output/public"
   publish = ".output/public"
 
 [build.environment]
   NODE_VERSION = "20"
-  NITRO_PRESET = "netlify"
   NPM_FLAGS = "--include=dev"
-  NODE_ENV = "development"
 
 [[redirects]]
   from = "/*"

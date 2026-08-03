@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import {
   createPixPayment,
   checkPaymentStatus,
+  DEFAULT_PIX_KEY,
+  PRODUCTION_ASAAS_API_KEY,
   type AsaasPaymentOrder,
 } from "../lib/asaas";
 
@@ -18,13 +20,14 @@ export function PaymentModal({
   clientName,
   partnerName,
   price = 9.90,
-  asaasApiKey,
+  asaasApiKey = PRODUCTION_ASAAS_API_KEY,
   onPaymentApproved,
   onClose,
 }: PaymentModalProps) {
   const [order, setOrder] = useState<AsaasPaymentOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
@@ -46,7 +49,7 @@ export function PaymentModal({
     };
   }, [clientName, price, asaasApiKey]);
 
-  // Poll for payment confirmation every 4 seconds if real Asaas API Key is provided
+  // Poll for payment confirmation every 4 seconds if real Asaas API Key is active
   useEffect(() => {
     if (!order || !asaasApiKey || order.id.startsWith("pay_")) return;
 
@@ -64,14 +67,14 @@ export function PaymentModal({
     return () => clearInterval(interval);
   }, [order, asaasApiKey, onPaymentApproved]);
 
-  const handleCopyPix = () => {
-    if (!order?.pixCopiaECola) return;
+  const handleCopyPixPayload = () => {
+    const payload = order?.pixCopiaECola || DEFAULT_PIX_KEY;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(order.pixCopiaECola);
+        navigator.clipboard.writeText(payload);
       } else {
         const input = document.createElement("input");
-        input.value = order.pixCopiaECola;
+        input.value = payload;
         document.body.appendChild(input);
         input.select();
         document.execCommand("copy");
@@ -82,6 +85,25 @@ export function PaymentModal({
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleCopyStaticKey = () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(DEFAULT_PIX_KEY);
+      } else {
+        const input = document.createElement("input");
+        input.value = DEFAULT_PIX_KEY;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 3000);
   };
 
   const handleSimulateApproval = () => {
@@ -113,7 +135,7 @@ export function PaymentModal({
           </h2>
 
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Efetue o pagamento abaixo para publicar o site exclusivo de 24 horas para{" "}
+            Efetue o pagamento via Pix para publicar o site exclusivo de 24 horas para{" "}
             <strong className="text-rose">{partnerName}</strong>.
           </p>
 
@@ -142,7 +164,7 @@ export function PaymentModal({
                   className="h-44 w-44 rounded-xl border border-border shadow-md"
                 />
               ) : (
-                /* Styled Fallback Pix QR Code graphic for test mode */
+                /* Fallback Graphic */
                 <div className="flex h-44 w-44 flex-col items-center justify-center rounded-xl bg-white p-3 shadow-inner border border-muted">
                   <div className="grid grid-cols-4 gap-1.5 w-full h-full p-2 bg-black/5 rounded-lg border border-dashed border-black/20">
                     <div className="bg-wine rounded"></div>
@@ -169,22 +191,39 @@ export function PaymentModal({
               </p>
             </div>
 
+            {/* Chave Pix Estática em Destaque */}
+            <div className="rounded-2xl bg-wine/10 border border-wine/30 p-3 text-center">
+              <span className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Chave Pix Direta:
+              </span>
+              <div className="flex items-center justify-center gap-2 font-mono text-xs font-bold text-rose select-all">
+                <span className="truncate">{DEFAULT_PIX_KEY}</span>
+                <button
+                  type="button"
+                  onClick={handleCopyStaticKey}
+                  className="shrink-0 rounded-lg bg-rose px-2.5 py-1 text-[10px] text-white hover:opacity-90 font-sans cursor-pointer"
+                >
+                  {copiedKey ? "Copiado! ✓" : "Copiar Chave"}
+                </button>
+              </div>
+            </div>
+
             {/* Pix Copia e Cola */}
             <div>
               <label className="mb-1 block text-xs font-medium text-foreground">
-                Ou use o Pix Copia e Cola:
+                Pix Copia e Cola (Asaas):
               </label>
 
               <div className="flex items-center gap-2 rounded-2xl bg-background p-2 border border-input shadow-sm">
                 <input
                   type="text"
                   readOnly
-                  value={order?.pixCopiaECola || ""}
+                  value={order?.pixCopiaECola || DEFAULT_PIX_KEY}
                   className="w-full bg-transparent px-3 text-xs font-mono text-muted-foreground focus:outline-none select-all truncate"
                 />
                 <button
                   type="button"
-                  onClick={handleCopyPix}
+                  onClick={handleCopyPixPayload}
                   className="shrink-0 rounded-xl bg-wine px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold hover:bg-wine/90 active:scale-95 transition-all cursor-pointer"
                 >
                   {copied ? "Copiado! ✓" : "Copiar"}
@@ -209,9 +248,6 @@ export function PaymentModal({
               >
                 <span>⚡</span> Simular Pagamento Aprovado (Liberar Link)
               </button>
-              <p className="mt-1 text-center text-[10px] text-muted-foreground">
-                Clique acima para testar o fluxo de liberação do link instantaneamente.
-              </p>
             </div>
           </div>
         )}

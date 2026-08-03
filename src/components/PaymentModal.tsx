@@ -19,7 +19,7 @@ interface PaymentModalProps {
 export function PaymentModal({
   clientName,
   partnerName,
-  price = 0.10,
+  price = 5.99,
   asaasApiKey = PRODUCTION_ASAAS_API_KEY,
   onPaymentApproved,
   onClose,
@@ -182,7 +182,7 @@ export function PaymentModal({
             {/* Pix Copia e Cola Oficial Bacen */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-foreground">
-                Pix Copia e Cola Oficial (R$ 0,10):
+                Pix Copia e Cola Oficial (R$ 5,99):
               </label>
 
               <div className="flex items-center gap-2 rounded-2xl bg-background p-2 border border-input shadow-sm">
@@ -238,7 +238,7 @@ export function PaymentModal({
                   onClick={onPaymentApproved}
                   className="mt-3 w-full rounded-2xl bg-emerald-600 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-emerald-700 active:scale-95 transition-all cursor-pointer shadow-md"
                 >
-                  ✓ Já Paguei R$ 0,10 / Liberar Link Agora
+                  ✓ Já Paguei R$ 5,99 / Liberar Link Agora
                 </button>
               )}
             </div>

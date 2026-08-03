@@ -204,54 +204,26 @@ function Index() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <figure className="group overflow-hidden rounded-2xl bg-card shadow-md transition-transform duration-500 hover:-translate-y-1">
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={moment1}
-                  alt="Mãos dadas com alianças"
-                  width={1024}
-                  height={1024}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              </div>
-              <figcaption className="p-5 text-center font-serif text-foreground/80">
-                Promessas que se renovam a cada dia
-              </figcaption>
-            </figure>
-
-            <figure className="group overflow-hidden rounded-2xl bg-card shadow-md transition-transform duration-500 hover:-translate-y-1">
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={moment2}
-                  alt="Caminhada romântica na praia ao pôr do sol"
-                  width={1024}
-                  height={1024}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              </div>
-              <figcaption className="p-5 text-center font-serif text-foreground/80">
-                Caminhos que queremos percorrer juntos
-              </figcaption>
-            </figure>
-
-            <figure className="group overflow-hidden rounded-2xl bg-card shadow-md transition-transform duration-500 hover:-translate-y-1 sm:col-span-2 lg:col-span-1">
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={moment3}
-                  alt="Jantar romântico à luz de velas"
-                  width={1024}
-                  height={1024}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              </div>
-              <figcaption className="p-5 text-center font-serif text-foreground/80">
-                Encontros que viraram hábito de amar
-              </figcaption>
-            </figure>
+            {GALERIA.map((foto) => (
+              <figure
+                key={foto.src}
+                className="group overflow-hidden rounded-2xl bg-card shadow-md transition-transform duration-500 hover:-translate-y-1"
+              >
+                <div className="aspect-[3/4] overflow-hidden">
+                  <img
+                    src={foto.src}
+                    alt={foto.alt}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                </div>
+                <figcaption className="p-5 text-center font-serif text-foreground/80">
+                  {foto.caption}
+                </figcaption>
+              </figure>
+            ))}
           </div>
+
         </div>
       </section>
 

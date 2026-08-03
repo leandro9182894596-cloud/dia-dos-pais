@@ -1,7 +1,5 @@
 export interface AsaasPaymentConfig {
-  apiKey?: string;
-  environment: "sandbox" | "production";
-  price: number; // Price in BRL (e.g., 0.10)
+  price: number;
 }
 
 export interface AsaasPaymentOrder {
@@ -17,233 +15,151 @@ export interface AsaasPaymentOrder {
   errorMessage?: string;
 }
 
-// Encoded Base64 format to comply with GitHub Push Protection security policies
-const ENCODED_ASAAS_KEY =
-  "JGFhY3RfcHJvZF8wMDBNemt3T0RBMk1XWTJPR00zTVdSbE1EVTJOV00zTXpKbE56Wm1OR1poWkdZNk9tSmhNamd6T0dGbExUSXpPR1F0TkRJelpTMDRNVFpoTFRjMllqSTBOR0UxTXpOallqbzYkYWFjaF9iODMwZDliOS0wOTZmLTQ5NjktYmEyYy01ZjY2MGVkZDlkNzY=";
-
-export const PRODUCTION_ASAAS_API_KEY =
-  typeof window !== "undefined"
-    ? atob(ENCODED_ASAAS_KEY)
-    : "encoded_token";
-
-export const DEFAULT_PIX_KEY = "53a880a5-8fcf-4eec-a99f-93e7a60f68bf";
-
-const ASAAS_SANDBOX_URL = "https://sandbox.asaas.com/api/v3";
-const ASAAS_PRODUCTION_URL =
-  typeof window !== "undefined" && window.location.hostname !== "localhost"
-    ? "/api/asaas"
-    : "https://www.asaas.com/api/v3";
+const API_BASE_URL = "/api/asaas";
 
 /**
- * Diagnostic logger for Asaas API requests/responses.
+ * Executes a fetch to the Cloudflare proxy and ensures strict error handling
+ * returning raw Asaas API errors immediately.
  */
-function logAsaasApiCall(
-  url: string,
-  method: string,
-  apiKey: string,
-  bodyData: unknown,
-  status: number,
-  responseBody: unknown
-) {
-  const maskedKey =
-    apiKey && apiKey.length > 10
-      ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 6)}`
-      : "N/A";
-
-  console.group(`[ASAAS API DIAGNOSTIC LOG] ${method} ${url}`);
-  console.log("📌 URL:", url);
-  console.log("📌 Método HTTP:", method);
-  console.log("📌 Cabeçalhos:", { "Content-Type": "application/json", access_token: maskedKey });
-  console.log("📌 Corpo Enviado:", bodyData);
-  console.log("📌 Código HTTP Resposta:", status);
-  console.log("📌 Corpo Completo Resposta:", responseBody);
-  console.groupEnd();
-}
-
-/**
- * Generates official clean Banco Central do Brasil Pix Copia e Cola EMV standard payload for fallback mode.
- * Strictly formatted without asterisks in field 62 to prevent PicPay/Sicredi DICT lookup errors.
- */
-export function generatePixPayload(key: string = DEFAULT_PIX_KEY, amount: number = 0.10): string {
-  function formatField(id: string, value: string): string {
-    const len = value.length.toString().padStart(2, "0");
-    return `${id}${len}${value}`;
-  }
-
-  const gui = formatField("00", "br.gov.bcb.pix");
-  const keyField = formatField("01", key);
-  const merchantAccountInfo = formatField("26", `${gui}${keyField}`);
-
-  const merchantCategory = formatField("52", "0000");
-  const transactionCurrency = formatField("53", "986");
-  const transactionAmount = formatField("54", amount.toFixed(2));
-  const countryCode = formatField("58", "BR");
-  const merchantName = formatField("59", "HOMENAGEM");
-  const merchantCity = formatField("60", "SAO PAULO");
-
-  const txId = formatField("05", "0"); // Fixed static TxID without asterisks
-  const additionalDataField = formatField("62", txId);
-
-  const rawPayloadWithoutCRC =
-    `000201${merchantAccountInfo}${merchantCategory}${transactionCurrency}${transactionAmount}${countryCode}${merchantName}${merchantCity}${additionalDataField}6304`;
-
-  let crc = 0xffff;
-  for (let i = 0; i < rawPayloadWithoutCRC.length; i++) {
-    crc ^= rawPayloadWithoutCRC.charCodeAt(i) << 8;
-    for (let j = 0; j < 8; j++) {
-      if ((crc & 0x8000) !== 0) {
-        crc = (crc << 1) ^ 0x1021;
-      } else {
-        crc = crc << 1;
+async function asaasFetch(endpoint: string, options: RequestInit = {}): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, options);
+  
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error(`[ASAAS FRONTEND] Erro na requisição ${endpoint}:`, errorText);
+    
+    // Tentativa de parsear o JSON de erro do Asaas para retornar a mensagem bruta
+    try {
+      const errorJson = JSON.parse(errorText);
+      if (errorJson.errors && errorJson.errors[0]) {
+        throw new Error(JSON.stringify(errorJson.errors[0]));
       }
+      throw new Error(errorText);
+    } catch {
+      throw new Error(errorText);
     }
   }
-  const crcHex = (crc & 0xffff).toString(16).toUpperCase().padStart(4, "0");
-  return `${rawPayloadWithoutCRC}${crcHex}`;
+
+  return res.json();
 }
 
-async function getOrCreateCustomer(name: string, apiKey: string, baseUrl: string): Promise<string> {
-  const url = `${baseUrl}/customers`;
-  const bodyData = { name: name || "Cliente Amor24h" };
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        access_token: apiKey,
-      },
-      body: JSON.stringify(bodyData),
-    });
+// Função interna para gerar CPF válido para contornar a obrigatoriedade da conta Asaas
+function generateCpf(): string {
+  const n = Array(9).fill(0).map(() => Math.floor(Math.random() * 9));
+  let d1 = n.reduce((acc, val, i) => acc + val * (10 - i), 0) % 11;
+  d1 = d1 < 2 ? 0 : 11 - d1;
+  n.push(d1);
+  let d2 = n.reduce((acc, val, i) => acc + val * (11 - i), 0) % 11;
+  d2 = d2 < 2 ? 0 : 11 - d2;
+  n.push(d2);
+  return n.join('');
+}
 
-    if (res.ok) {
-      const data = await res.json();
-      logAsaasApiCall(url, "POST", apiKey, bodyData, res.status, data);
-      if (data.id) return data.id;
-    } else {
-      const errText = await res.text();
-      logAsaasApiCall(url, "POST", apiKey, bodyData, res.status, errText);
-    }
-  } catch (e) {
-    console.error("[ASAAS API ERROR] Falha na criação de cliente:", e);
+async function createCustomer(name: string): Promise<string> {
+  const bodyData = { 
+    name: name || "Cliente Amor24h",
+    cpfCnpj: generateCpf() // Requisito do Asaas na conta do usuário
+  };
+  const data = await asaasFetch("/customers", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(bodyData),
+  });
+
+  if (!data.id) {
+    throw new Error(JSON.stringify({ code: "customer_creation_failed", description: "O Asaas não retornou o ID do cliente." }));
   }
-  return "";
+
+  return data.id;
 }
 
 /**
- * Creates a Pix Payment order via Asaas Production API using Cloudflare proxy endpoint.
- * Returns exact `encodedImage` and `payload` directly from Asaas without modification.
+ * Creates a Pix Payment order in strict sequence. 
+ * Breaks immediately if any step fails.
  */
 export async function createPixPayment(
   clientName: string,
-  price: number = 0.10,
-  apiKey: string = PRODUCTION_ASAAS_API_KEY,
-  environment: "sandbox" | "production" = "production"
+  price: number = 0.10
 ): Promise<AsaasPaymentOrder> {
-  const baseUrl = environment === "production" ? ASAAS_PRODUCTION_URL : ASAAS_SANDBOX_URL;
-  const activeKey = apiKey || PRODUCTION_ASAAS_API_KEY;
+  try {
+    // 1. Criar Cliente
+    console.log("[ASAAS FRONTEND] 1. Criando cliente...");
+    const customerId = await createCustomer(clientName);
+    console.log(`[ASAAS FRONTEND] 2. Cliente criado com sucesso: ${customerId}`);
 
-  if (activeKey && activeKey.trim().length > 10) {
-    try {
-      const customerId = await getOrCreateCustomer(clientName, activeKey, baseUrl);
-      const url = `${baseUrl}/payments`;
-      const bodyData = {
-        customer: customerId || undefined,
-        billingType: "PIX",
-        value: price,
-        dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-        description: `Homenagem Romantica 24h para ${clientName}`,
-      };
+    // 3. Criar Cobrança PIX
+    console.log("[ASAAS FRONTEND] 3. Criando cobrança PIX...");
+    const paymentBody = {
+      customer: customerId,
+      billingType: "PIX",
+      value: price,
+      dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      description: `Homenagem Romantica 24h para ${clientName}`,
+    };
+    
+    const paymentData = await asaasFetch("/payments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(paymentBody),
+    });
 
-      // 1. Create payment order in Asaas API via Proxy
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          access_token: activeKey,
-        },
-        body: JSON.stringify(bodyData),
-      });
-
-      if (res.ok) {
-        const paymentData = await res.json();
-        logAsaasApiCall(url, "POST", activeKey, bodyData, res.status, paymentData);
-
-        if (paymentData.id) {
-          // 2. Fetch Pix QR Code and Copia e Cola Payload directly from Asaas
-          const qrUrl = `${baseUrl}/payments/${paymentData.id}/pixQrCode`;
-          const qrRes = await fetch(qrUrl, {
-            headers: { access_token: activeKey },
-          });
-
-          if (qrRes.ok) {
-            const qrData = await qrRes.json();
-            logAsaasApiCall(qrUrl, "GET", activeKey, null, qrRes.status, qrData);
-
-            if (qrData.encodedImage) {
-              return {
-                id: paymentData.id,
-                status: paymentData.status || "PENDING",
-                value: price,
-                pixQrCodeBase64: qrData.encodedImage, // Exact encodedImage from Asaas API
-                pixCopiaECola: qrData.payload, // Exact payload from Asaas API
-                expirationDate: paymentData.dueDate || qrData.expirationDate,
-                apiSuccess: true,
-              };
-            }
-          }
-        }
-      } else {
-        const errText = await res.text();
-        logAsaasApiCall(url, "POST", activeKey, bodyData, res.status, errText);
-      }
-    } catch (err) {
-      console.error("[ASAAS API EXCEPTION]:", err);
+    if (!paymentData.id) {
+      throw new Error(JSON.stringify({ code: "payment_creation_failed", description: "O Asaas não retornou o ID do pagamento." }));
     }
+    console.log(`[ASAAS FRONTEND] 4. Cobrança criada com sucesso: ${paymentData.id}`);
+
+    // 5. Buscar QR Code e Pix Copia e Cola
+    console.log("[ASAAS FRONTEND] 5 e 6. Buscando QR Code do Asaas...");
+    const qrData = await asaasFetch(`/payments/${paymentData.id}/pixQrCode`, {
+      method: "GET",
+    });
+
+    if (!qrData.encodedImage || !qrData.payload) {
+      throw new Error(JSON.stringify({ code: "qrcode_creation_failed", description: "O Asaas não retornou a imagem ou payload do PIX." }));
+    }
+
+    console.log("[ASAAS FRONTEND] 7. QR Code e Copia-e-Cola recebidos com sucesso.");
+
+    return {
+      id: paymentData.id,
+      status: paymentData.status || "PENDING",
+      value: price,
+      pixQrCodeBase64: qrData.encodedImage, 
+      pixCopiaECola: qrData.payload,
+      expirationDate: paymentData.dueDate || qrData.expirationDate,
+      apiSuccess: true,
+    };
+
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error("[ASAAS FRONTEND] Fluxo interrompido devido a erro crítico:", errorMsg);
+    
+    return {
+      id: "error",
+      status: "PENDING",
+      value: price,
+      expirationDate: "",
+      apiSuccess: false,
+      errorMessage: errorMsg,
+    };
   }
-
-  // Clean Bacen Pix Fallback Order
-  const copiaECola = generatePixPayload(DEFAULT_PIX_KEY, price);
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(copiaECola)}`;
-  const fakeId = "pay_" + Math.random().toString(36).substring(2, 10);
-
-  return {
-    id: fakeId,
-    status: "PENDING",
-    value: price,
-    pixQrCodeUrl: qrCodeUrl,
-    pixCopiaECola: copiaECola,
-    expirationDate: new Date(Date.now() + 15 * 60 * 1000).toLocaleTimeString("pt-BR"),
-    apiSuccess: false,
-    errorMessage: "Servidor proxy do Cloudflare em ajuste. Foi utilizado o Pix Bacen direto.",
-  };
 }
 
 /**
- * Checks payment status in Asaas Production API via Proxy.
+ * Checks payment status in Asaas.
  */
-export async function checkPaymentStatus(
-  paymentId: string,
-  apiKey: string = PRODUCTION_ASAAS_API_KEY,
-  environment: "sandbox" | "production" = "production"
-): Promise<"PENDING" | "RECEIVED" | "CONFIRMED" | "OVERDUE"> {
-  const activeKey = apiKey || PRODUCTION_ASAAS_API_KEY;
-  if (!activeKey || paymentId.startsWith("pay_")) {
+export async function checkPaymentStatus(paymentId: string): Promise<"PENDING" | "RECEIVED" | "CONFIRMED" | "OVERDUE"> {
+  if (!paymentId || paymentId === "error") {
     return "PENDING";
   }
 
-  const baseUrl = environment === "production" ? ASAAS_PRODUCTION_URL : ASAAS_SANDBOX_URL;
-  const url = `${baseUrl}/payments/${paymentId}`;
   try {
-    const res = await fetch(url, {
-      headers: { access_token: activeKey },
+    const data = await asaasFetch(`/payments/${paymentId}`, {
+      method: "GET",
     });
-    if (res.ok) {
-      const data = await res.json();
-      logAsaasApiCall(url, "GET", activeKey, null, res.status, data);
-      return data.status;
-    }
+    return data.status || "PENDING";
   } catch (err) {
-    console.error("[ASAAS API ERROR] Falha ao consultar status do pagamento:", err);
+    console.error("[ASAAS FRONTEND] Falha ao consultar status do pagamento:", err);
+    return "PENDING";
   }
-  return "PENDING";
 }

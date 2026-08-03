@@ -108,7 +108,9 @@ function Countdown() {
 function Index() {
   return (
     <main className="min-h-screen bg-background">
+      <GiftReveal />
       <MusicPlayer />
+
       {/* Hero */}
       <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden">
         <div className="absolute inset-0">

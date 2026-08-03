@@ -199,8 +199,9 @@ function Index() {
               Nossos momentos
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              Cada foto conta um pedacinho da nossa história. Envie as suas fotos para que eu possa substituir essas imagens pelos momentos reais de vocês.
+              Cada foto conta um pedacinho da nossa história — e a minha parte favorita é você.
             </p>
+
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

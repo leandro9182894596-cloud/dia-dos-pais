@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import {
   createPixPayment,
   checkPaymentStatus,
-  DEFAULT_PIX_KEY,
-  PRODUCTION_ASAAS_API_KEY,
   type AsaasPaymentOrder,
 } from "../lib/asaas";
 
@@ -11,7 +9,6 @@ interface PaymentModalProps {
   clientName: string;
   partnerName: string;
   price?: number;
-  asaasApiKey?: string;
   onPaymentApproved: () => void;
   onClose: () => void;
 }
@@ -20,14 +17,12 @@ export function PaymentModal({
   clientName,
   partnerName,
   price = 5.99,
-  asaasApiKey = PRODUCTION_ASAAS_API_KEY,
   onPaymentApproved,
   onClose,
 }: PaymentModalProps) {
   const [order, setOrder] = useState<AsaasPaymentOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [copiedKey, setCopiedKey] = useState(false);
   const [statusText, setStatusText] = useState("Aguardando confirmação do Pix...");
 
   useEffect(() => {
@@ -35,14 +30,14 @@ export function PaymentModal({
 
     async function initPayment() {
       setLoading(true);
-      const newOrder = await createPixPayment(clientName, price, asaasApiKey);
+      const newOrder = await createPixPayment(clientName, price);
       if (isMounted) {
         setOrder(newOrder);
         setLoading(false);
         if (newOrder.apiSuccess) {
           setStatusText("Aguardando confirmação do Pix pela API do Asaas...");
         } else {
-          setStatusText("Pix Bacen Gerado com Sucesso! Faça a transferência.");
+          setStatusText(`Erro: ${newOrder.errorMessage || "Falha ao gerar PIX."}`);
         }
       }
     }
@@ -52,17 +47,17 @@ export function PaymentModal({
     return () => {
       isMounted = false;
     };
-  }, [clientName, price, asaasApiKey]);
+  }, [clientName, price]);
 
   // Automatic Polling for Asaas API orders
   useEffect(() => {
-    if (!order || !order.id || order.id.startsWith("pay_")) return;
+    if (!order || !order.id || order.id === "error" || !order.apiSuccess) return;
 
     const pollingInterval = setInterval(async () => {
-      const status = await checkPaymentStatus(order.id, asaasApiKey);
+      const status = await checkPaymentStatus(order.id);
       if (status === "RECEIVED" || status === "CONFIRMED") {
         clearInterval(pollingInterval);
-        setStatusText("✓ Pagamento Confirmado na API do Asaas!");
+        setStatusText("✓ Pagamento Confirmado pela API do Asaas!");
         setTimeout(() => onPaymentApproved(), 500);
       }
     }, 2500);
@@ -70,10 +65,11 @@ export function PaymentModal({
     return () => {
       clearInterval(pollingInterval);
     };
-  }, [order, asaasApiKey, onPaymentApproved]);
+  }, [order, onPaymentApproved]);
 
   const handleCopyPixPayload = () => {
-    const payload = order?.pixCopiaECola || DEFAULT_PIX_KEY;
+    const payload = order?.pixCopiaECola || "";
+    if (!payload) return;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(payload);
@@ -90,25 +86,6 @@ export function PaymentModal({
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
-  };
-
-  const handleCopyStaticKey = () => {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(DEFAULT_PIX_KEY);
-      } else {
-        const input = document.createElement("input");
-        input.value = DEFAULT_PIX_KEY;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand("copy");
-        document.body.removeChild(input);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    setCopiedKey(true);
-    setTimeout(() => setCopiedKey(false), 3000);
   };
 
   const qrImageSrc = order?.pixQrCodeBase64
@@ -156,7 +133,14 @@ export function PaymentModal({
         {loading ? (
           <div className="py-12 text-center">
             <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-rose border-t-transparent" />
-            <p className="text-xs text-muted-foreground font-serif">Gerando PIX...</p>
+            <p className="text-xs text-muted-foreground font-serif">Gerando PIX via Asaas...</p>
+          </div>
+        ) : !order?.apiSuccess ? (
+          <div className="rounded-2xl bg-red-500/10 border border-red-500/30 p-4 text-center">
+            <p className="text-sm font-bold text-red-500 mb-2">❌ Falha ao gerar o PIX</p>
+            <p className="text-xs text-muted-foreground break-all">
+              {order?.errorMessage || "Erro desconhecido."}
+            </p>
           </div>
         ) : (
           <div className="space-y-4 font-serif">
@@ -165,7 +149,7 @@ export function PaymentModal({
               {qrImageSrc ? (
                 <img
                   src={qrImageSrc}
-                  alt="QR Code Pix Bacen"
+                  alt="QR Code Pix"
                   className="h-52 w-52 rounded-xl border border-border shadow-md object-contain bg-white p-2"
                 />
               ) : (
@@ -179,17 +163,17 @@ export function PaymentModal({
               </p>
             </div>
 
-            {/* Pix Copia e Cola Oficial Bacen */}
+            {/* Pix Copia e Cola */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-foreground">
-                Pix Copia e Cola Oficial (R$ 5,99):
+                Pix Copia e Cola Oficial (R$ {price.toFixed(2).replace(".", ",")}):
               </label>
 
               <div className="flex items-center gap-2 rounded-2xl bg-background p-2 border border-input shadow-sm">
                 <input
                   type="text"
                   readOnly
-                  value={order?.pixCopiaECola || DEFAULT_PIX_KEY}
+                  value={order?.pixCopiaECola || ""}
                   className="w-full bg-transparent px-3 text-xs font-mono text-foreground focus:outline-none select-all truncate font-semibold"
                 />
                 <button
@@ -202,23 +186,6 @@ export function PaymentModal({
               </div>
             </div>
 
-            {/* Chave Pix Estática em Destaque */}
-            <div className="rounded-2xl bg-wine/10 border border-wine/30 p-3 text-center">
-              <span className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                Chave Pix Direta:
-              </span>
-              <div className="flex items-center justify-center gap-2 font-mono text-xs font-bold text-rose select-all">
-                <span className="truncate">{DEFAULT_PIX_KEY}</span>
-                <button
-                  type="button"
-                  onClick={handleCopyStaticKey}
-                  className="shrink-0 rounded-lg bg-rose px-2.5 py-1 text-[10px] text-white hover:opacity-90 font-sans cursor-pointer"
-                >
-                  {copiedKey ? "Copiado! ✓" : "Copiar Chave"}
-                </button>
-              </div>
-            </div>
-
             {/* Status Indicator */}
             <div className="flex flex-col items-center justify-center rounded-2xl bg-rose/10 border border-rose/30 p-4 text-rose shadow-sm">
               <div className="flex items-center gap-2 font-bold text-sm">
@@ -226,21 +193,8 @@ export function PaymentModal({
                 <span>{statusText}</span>
               </div>
               <p className="mt-1 text-center text-xs text-muted-foreground">
-                {order?.apiSuccess
-                  ? "A liberação do link ocorrerá automaticamente quando a API confirmar o recebimento do Pix."
-                  : "Transferência direta para a chave Pix configurada."}
+                A liberação do link ocorrerá automaticamente quando a API confirmar o recebimento do Pix.
               </p>
-
-              {/* Instant Manual Approval Button for Fallback mode */}
-              {!order?.apiSuccess && (
-                <button
-                  type="button"
-                  onClick={onPaymentApproved}
-                  className="mt-3 w-full rounded-2xl bg-emerald-600 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-emerald-700 active:scale-95 transition-all cursor-pointer shadow-md"
-                >
-                  ✓ Já Paguei R$ 5,99 / Liberar Link Agora
-                </button>
-              )}
             </div>
           </div>
         )}

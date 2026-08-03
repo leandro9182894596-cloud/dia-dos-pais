@@ -133,17 +133,6 @@ export function HomenagemView({ data, isPreview = false }: HomenagemViewProps) {
           <p className="mx-auto mt-4 max-w-lg font-serif text-lg italic text-cream/80">
             de {data.clientName}
           </p>
-          <p className="mx-auto mt-3 max-w-xl font-serif text-xl italic text-cream/90 sm:text-2xl">
-            Nascido em {formattedDate} — cada dia ao seu lado é um presente inestimável.
-          </p>
-
-          {/* Contador de vida */}
-          <div className="mx-auto mt-6 max-w-xl">
-            <p className="mb-4 text-xs uppercase tracking-widest text-cream/60 font-medium">
-              Tempo de vida juntos
-            </p>
-            <LifeCounter startDateStr={data.startDate} />
-          </div>
         </div>
       </section>
 

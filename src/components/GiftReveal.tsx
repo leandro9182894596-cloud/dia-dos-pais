@@ -31,8 +31,9 @@ export function GiftReveal() {
 
   if (stage === "done") return null;
 
-  const momento = MOMENTOS[index];
+  const momento = MOMENTOS[index] ?? MOMENTOS[0]!;
   const isLast = index === MOMENTOS.length - 1;
+
 
   const avancar = () => {
     if (isLast) setStage("done");

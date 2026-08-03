@@ -167,18 +167,3 @@
   }
 }
 
-@font-face {
-  font-family: "Playfair Display";
-  src: url("https://fonts.gstatic.com/s/playfairdisplay/v37/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvXDXbtM.woff2") format("woff2");
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Cormorant Garamond";
-  src: url("https://fonts.gstatic.com/s/cormorantgaramond/v16/co3YmX5lCN6Fsj1FzP6pOn4Y9lGpQ4xI5A.woff2") format("woff2");
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: swap;
-}

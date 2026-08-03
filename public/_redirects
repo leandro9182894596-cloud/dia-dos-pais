@@ -1,2 +1,1 @@
-/api/asaas/* https://www.asaas.com/api/v3/:splat 200!
-/* /index.html 200
+/api/asaas/* https://www.asaas.com/api/v3/:splat 200

@@ -28,8 +28,7 @@ export function PaymentModal({
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
-  const [countdown, setCountdown] = useState(15);
-  const [statusText, setStatusText] = useState("Aguardando confirmação do Pix...");
+  const [statusText, setStatusText] = useState("Aguardando confirmação do Pix pela API do Asaas...");
 
   useEffect(() => {
     let isMounted = true;
@@ -50,40 +49,21 @@ export function PaymentModal({
     };
   }, [clientName, price, asaasApiKey]);
 
-  // Automatic 100% background polling & auto-release timer
+  // Strict Polling: Liberacao do link SOMENTE quando a API do Asaas retornar RECEIVED ou CONFIRMED
   useEffect(() => {
-    if (!order) return;
+    if (!order || !order.id || order.id.startsWith("pay_")) return;
 
-    // 1. Polling Asaas API every 2 seconds for real RECEIVED / CONFIRMED status
     const pollingInterval = setInterval(async () => {
-      if (!order.id.startsWith("pay_")) {
-        const status = await checkPaymentStatus(order.id, asaasApiKey);
-        if (status === "RECEIVED" || status === "CONFIRMED") {
-          clearInterval(pollingInterval);
-          setStatusText("✓ Pagamento Confirmado no Asaas!");
-          setTimeout(() => onPaymentApproved(), 500);
-          return;
-        }
+      const status = await checkPaymentStatus(order.id, asaasApiKey);
+      if (status === "RECEIVED" || status === "CONFIRMED") {
+        clearInterval(pollingInterval);
+        setStatusText("✓ Pagamento Confirmado na API do Asaas!");
+        setTimeout(() => onPaymentApproved(), 500);
       }
-    }, 2000);
-
-    // 2. Automatic Countdown Timer (15s auto-approval guarantee)
-    const countdownInterval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          clearInterval(pollingInterval);
-          setStatusText("✓ Pagamento Aprovado Automaticamente!");
-          setTimeout(() => onPaymentApproved(), 600);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    }, 2500);
 
     return () => {
       clearInterval(pollingInterval);
-      clearInterval(countdownInterval);
     };
   }, [order, asaasApiKey, onPaymentApproved]);
 
@@ -234,14 +214,14 @@ export function PaymentModal({
               </div>
             </div>
 
-            {/* Live Automatic Verification Status Bar */}
-            <div className="flex flex-col items-center justify-center rounded-2xl bg-emerald-50 border border-emerald-300 p-4 text-emerald-800 shadow-sm">
+            {/* Strict Asaas API Status Indicator */}
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-rose/10 border border-rose/30 p-4 text-rose shadow-sm">
               <div className="flex items-center gap-2 font-bold text-sm">
-                <span className="h-3 w-3 rounded-full bg-emerald-600 animate-ping" />
+                <span className="h-3 w-3 rounded-full bg-rose animate-ping" />
                 <span>{statusText}</span>
               </div>
-              <p className="mt-1 text-center text-xs text-emerald-700">
-                Liberação automática em <strong>{countdown} segundos</strong> após a leitura do Pix.
+              <p className="mt-1 text-center text-xs text-muted-foreground">
+                A liberação do link ocorrerá estritamente quando a API do Asaas confirmar o recebimento do Pix.
               </p>
             </div>
           </div>

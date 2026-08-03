@@ -4,20 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -167,3 +153,77 @@
   }
 }
 
+/* Custom Keyframe Animations for Premium Experience */
+
+@keyframes floatSmooth {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes ribbonShine {
+  0% {
+    transform: translateX(-150%) rotate(25deg);
+  }
+  40%, 100% {
+    transform: translateX(250%) rotate(25deg);
+  }
+}
+
+@keyframes softBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes lidOpen {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-40px) rotate(-18deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-90px) rotate(-35deg) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.animate-float-smooth {
+  animation: floatSmooth 4.5s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 3.5s ease-in-out infinite;
+}
+
+.animate-ribbon-shine {
+  animation: ribbonShine 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-soft-bounce {
+  animation: softBounce 2s ease-in-out infinite;
+}
+
+.animate-lid-open {
+  animation: lidOpen 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}

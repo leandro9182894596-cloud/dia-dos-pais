@@ -1,44 +1,44 @@
 import { useEffect, useRef, useState } from "react";
 
-import musicAsset from "../assets/musica-romantica.mp3.asset.json";
+interface MusicPlayerProps {
+  musicUrl?: string;
+  autoPlayTrigger?: boolean;
+}
 
-export function MusicPlayer() {
+const DEFAULT_MUSIC_URL = "/musica-romantica.mp3";
+
+export function MusicPlayer({ musicUrl, autoPlayTrigger }: MusicPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
+
+  const activeSrc = musicUrl || DEFAULT_MUSIC_URL;
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = 0.4;
-
-    const tryPlay = () => {
-      audio
-        .play()
-        .then(() => setPlaying(true))
-        .catch(() => setPlaying(false));
-    };
-
-    tryPlay();
-
-    const onFirstInteraction = () => {
-      if (audio.paused) tryPlay();
-      window.removeEventListener("pointerdown", onFirstInteraction);
-      window.removeEventListener("keydown", onFirstInteraction);
-    };
-
-    window.addEventListener("pointerdown", onFirstInteraction);
-    window.addEventListener("keydown", onFirstInteraction);
-    return () => {
-      window.removeEventListener("pointerdown", onFirstInteraction);
-      window.removeEventListener("keydown", onFirstInteraction);
-    };
+    audio.volume = 0.5;
   }, []);
+
+  // Whenever autoPlayTrigger becomes true (e.g. user clicked on the gift box)
+  useEffect(() => {
+    if (!autoPlayTrigger) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio
+      .play()
+      .then(() => setPlaying(true))
+      .catch((err) => console.warn("Erro de reprodução de áudio:", err));
+  }, [autoPlayTrigger]);
 
   const toggle = () => {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
-      audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+      audio
+        .play()
+        .then(() => setPlaying(true))
+        .catch(() => setPlaying(false));
     } else {
       audio.pause();
       setPlaying(false);
@@ -47,7 +47,7 @@ export function MusicPlayer() {
 
   return (
     <>
-      <audio ref={audioRef} src={musicAsset.url} loop preload="auto" />
+      <audio ref={audioRef} src={activeSrc} loop preload="auto" />
       <button
         type="button"
         onClick={toggle}

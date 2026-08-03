@@ -84,7 +84,6 @@ const PhotoItem = memo(function PhotoItem({
 });
 
 export function CreatorForm() {
-  // Input references for 100% native fast typing without React re-renders on keystrokes
   const clientNameRef = useRef<HTMLInputElement>(null);
   const partnerNameRef = useRef<HTMLInputElement>(null);
   const startDateRef = useRef<HTMLInputElement>(null);
@@ -97,7 +96,6 @@ export function CreatorForm() {
   const [uploading, setUploading] = useState(false);
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
 
-  // Preview state
   const [previewData, setPreviewData] = useState<HomenagemData | null>(null);
   const [partnerNameForShare, setPartnerNameForShare] = useState<string>("");
 
@@ -426,8 +424,8 @@ export function CreatorForm() {
       {/* Full-Screen Live Interactive Preview Modal */}
       {previewData && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/90 animate-fade-in pointer-events-auto">
-          {/* Top Bar inside Preview Modal */}
-          <div className="sticky top-0 z-50 flex items-center justify-between bg-wine/95 px-6 py-3 text-white shadow-xl backdrop-blur-md border-b border-gold/30">
+          {/* Top Bar inside Preview Modal - z-[70] for priority controls */}
+          <div className="sticky top-0 z-[70] flex items-center justify-between bg-wine/95 px-6 py-3 text-white shadow-xl backdrop-blur-md border-b border-gold/30">
             <div className="flex items-center gap-2">
               <span className="text-xl">👁</span>
               <span className="font-serif text-sm font-bold uppercase tracking-wider">
@@ -454,8 +452,8 @@ export function CreatorForm() {
             </div>
           </div>
 
-          {/* Interactive Homenagem View (isPreview = true para performance maxima na previa) */}
-          <HomenagemView data={previewData} isPreview={true} />
+          {/* Interactive Homenagem View (isPreview = false para exibir a experiencia completa do presente 3D + musica) */}
+          <HomenagemView data={previewData} isPreview={false} />
         </div>
       )}
 

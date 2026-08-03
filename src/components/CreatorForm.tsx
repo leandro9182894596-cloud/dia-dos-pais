@@ -26,7 +26,7 @@ const PhotoItem = memo(function PhotoItem({
   onMensagemChange,
 }: PhotoItemProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-sm flex flex-col justify-between">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-sm flex flex-col justify-between pointer-events-auto">
       <div>
         <div className="aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted relative">
           <img
@@ -38,7 +38,7 @@ const PhotoItem = memo(function PhotoItem({
           <button
             type="button"
             onClick={() => onRemove(foto.id)}
-            className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-xs font-bold text-white hover:bg-red-600 transition-colors shadow-md"
+            className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-xs font-bold text-white hover:bg-red-600 transition-colors shadow-md z-20 cursor-pointer"
           >
             ✕
           </button>
@@ -49,28 +49,32 @@ const PhotoItem = memo(function PhotoItem({
 
         <div className="mt-3 space-y-2">
           <div>
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            <label htmlFor={`caption-${foto.id}`} className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
               Título / Legenda:
             </label>
             <input
+              id={`caption-${foto.id}`}
+              name={`caption-${foto.id}`}
               type="text"
               value={foto.caption}
               onChange={(e) => onCaptionChange(foto.id, e.target.value)}
               placeholder="Ex: Nosso primeiro encontro"
-              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose font-medium"
+              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose font-medium pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            <label htmlFor={`msg-${foto.id}`} className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
               Mensagem desta foto:
             </label>
             <textarea
+              id={`msg-${foto.id}`}
+              name={`msg-${foto.id}`}
               rows={2}
               value={foto.mensagem || ""}
               onChange={(e) => onMensagemChange(foto.id, e.target.value)}
               placeholder="Escreva uma mensagem ou lembrança para esta foto..."
-              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose leading-relaxed"
+              className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose leading-relaxed pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
         </div>
@@ -211,7 +215,7 @@ export function CreatorForm() {
   }, [showPreviewModal, clientName, partnerName, startDate, startTime, letterBody, photos, musicUrl]);
 
   return (
-    <div className="mx-auto max-w-3xl rounded-3xl bg-card p-6 shadow-2xl border border-wine/10 sm:p-10">
+    <div className="relative z-10 mx-auto max-w-3xl rounded-3xl bg-card p-6 shadow-2xl border border-wine/10 sm:p-10 pointer-events-auto">
       <div className="mb-8 text-center">
         <span className="inline-block rounded-full bg-rose/10 px-4 py-1.5 font-serif text-xs font-semibold uppercase tracking-widest text-rose">
           Criador de Homenagem
@@ -224,34 +228,40 @@ export function CreatorForm() {
         </p>
       </div>
 
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6 pointer-events-auto">
         {/* Nomes */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
+            <label htmlFor="clientName" className="mb-1.5 block text-sm font-medium text-foreground">
               Seu Nome:
             </label>
             <input
+              id="clientName"
+              name="clientName"
               type="text"
               required
+              autoComplete="off"
               placeholder="Ex: Leandro"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
+            <label htmlFor="partnerName" className="mb-1.5 block text-sm font-medium text-foreground">
               Nome do Seu Amor (Parceiro/a):
             </label>
             <input
+              id="partnerName"
+              name="partnerName"
               type="text"
               required
+              autoComplete="off"
               placeholder="Ex: Wanda"
               value={partnerName}
               onChange={(e) => setPartnerName(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
         </div>
@@ -259,41 +269,47 @@ export function CreatorForm() {
         {/* Data do relacionamento */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
+            <label htmlFor="startDate" className="mb-1.5 block text-sm font-medium text-foreground">
               Data de Início do Relacionamento:
             </label>
             <input
+              id="startDate"
+              name="startDate"
               type="date"
               required
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
+            <label htmlFor="startTime" className="mb-1.5 block text-sm font-medium text-foreground">
               Horário (Opcional):
             </label>
             <input
+              id="startTime"
+              name="startTime"
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
         </div>
 
         {/* Carta de Amor */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
+          <label htmlFor="letterBody" className="mb-1.5 block text-sm font-medium text-foreground">
             Sua Carta de Amor:
           </label>
           <textarea
+            id="letterBody"
+            name="letterBody"
             rows={5}
             value={letterBody}
             onChange={(e) => setLetterBody(e.target.value)}
-            className="w-full rounded-2xl border border-input bg-background p-4 text-base leading-relaxed text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30"
+            className="w-full rounded-2xl border border-input bg-background p-4 text-base leading-relaxed text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
           />
         </div>
 
@@ -307,7 +323,7 @@ export function CreatorForm() {
           </p>
 
           {!musicFileName ? (
-            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-input bg-background px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-secondary/40 transition-colors">
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-input bg-background px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-secondary/40 transition-colors pointer-events-auto relative z-10">
               <span className="text-xl">🎵</span>
               <span>Escolher arquivo de áudio (MP3 / WAV / M4A)</span>
               <input
@@ -326,7 +342,7 @@ export function CreatorForm() {
               <button
                 type="button"
                 onClick={handleRemoveMusic}
-                className="text-xs font-bold text-rose hover:underline shrink-0 ml-2"
+                className="text-xs font-bold text-rose hover:underline shrink-0 ml-2 cursor-pointer"
               >
                 Remover / Usar padrão
               </button>
@@ -346,7 +362,7 @@ export function CreatorForm() {
           </div>
 
           {photos.length < 10 && (
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-rose/40 bg-rose/5 p-6 text-center transition-colors hover:bg-rose/10">
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-rose/40 bg-rose/5 p-6 text-center transition-colors hover:bg-rose/10 pointer-events-auto relative z-10">
               <span className="text-3xl mb-1">📷</span>
               <span className="text-sm font-semibold text-rose">
                 {uploading ? "Carregando fotos..." : "Clique para adicionar fotos do casal"}
@@ -387,7 +403,7 @@ export function CreatorForm() {
           <button
             type="button"
             onClick={handleOpenPreview}
-            className="flex items-center justify-center gap-2 rounded-full border-2 border-rose bg-rose/10 py-3.5 text-sm font-semibold uppercase tracking-wider text-rose shadow-md transition-all hover:bg-rose/20 active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-full border-2 border-rose bg-rose/10 py-3.5 text-sm font-semibold uppercase tracking-wider text-rose shadow-md transition-all hover:bg-rose/20 active:scale-95 cursor-pointer pointer-events-auto relative z-10"
           >
             <span>👁</span> Pré-visualizar Homenagem
           </button>
@@ -395,7 +411,7 @@ export function CreatorForm() {
           <button
             type="button"
             onClick={handleGenerateLink}
-            className="flex items-center justify-center gap-2 rounded-full bg-rose py-3.5 text-sm font-semibold uppercase tracking-wider text-rose-foreground shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-full bg-rose py-3.5 text-sm font-semibold uppercase tracking-wider text-rose-foreground shadow-xl transition-all hover:scale-[1.02] active:scale-95 cursor-pointer pointer-events-auto relative z-10"
           >
             <span>✨</span> Gerar Link (Validade 24h)
           </button>
@@ -404,7 +420,7 @@ export function CreatorForm() {
 
       {/* Full-Screen Live Interactive Preview Modal */}
       {showPreviewModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/90 animate-fade-in">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/90 animate-fade-in pointer-events-auto">
           {/* Top Bar inside Preview Modal */}
           <div className="sticky top-0 z-50 flex items-center justify-between bg-wine/95 px-6 py-3 text-white shadow-xl backdrop-blur-md border-b border-gold/30">
             <div className="flex items-center gap-2">
@@ -418,7 +434,7 @@ export function CreatorForm() {
               <button
                 type="button"
                 onClick={() => setShowPreviewModal(false)}
-                className="rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white hover:bg-white/30 transition-colors"
+                className="rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white hover:bg-white/30 transition-colors cursor-pointer"
               >
                 ✏️ Editar
               </button>
@@ -426,7 +442,7 @@ export function CreatorForm() {
               <button
                 type="button"
                 onClick={handleGenerateLink}
-                className="rounded-full bg-rose px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md hover:scale-105 transition-transform"
+                className="rounded-full bg-rose px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md hover:scale-105 transition-transform cursor-pointer"
               >
                 ✨ Confirmar & Gerar Link (24h)
               </button>

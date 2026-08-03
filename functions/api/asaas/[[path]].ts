@@ -1,13 +1,9 @@
-export async function onRequest(context: { request: Request; params: { path?: string[] } }) {
-  const url = new URL(context.request.url);
-  const pathArray = context.params.path || [];
-  const targetPath = pathArray.join("/");
+async function handleAsaasProxy(request: Request, pathArray?: string[]): Promise<Response> {
+  const url = new URL(request.url);
+  const targetPath = pathArray ? pathArray.join("/") : url.pathname.replace("/api/asaas/", "");
   const targetUrl = `https://www.asaas.com/api/v3/${targetPath}${url.search}`;
 
-  const modifiedHeaders = new Headers(context.request.headers);
-  modifiedHeaders.set("Host", "www.asaas.com");
-
-  if (context.request.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
       headers: {
@@ -19,11 +15,14 @@ export async function onRequest(context: { request: Request; params: { path?: st
   }
 
   try {
-    const isBodyAllowed = !["GET", "HEAD"].includes(context.request.method);
-    const body = isBodyAllowed ? await context.request.arrayBuffer() : undefined;
+    const modifiedHeaders = new Headers(request.headers);
+    modifiedHeaders.set("Host", "www.asaas.com");
+
+    const isBodyAllowed = !["GET", "HEAD"].includes(request.method);
+    const body = isBodyAllowed ? await request.arrayBuffer() : undefined;
 
     const response = await fetch(targetUrl, {
-      method: context.request.method,
+      method: request.method,
       headers: modifiedHeaders,
       body: body,
     });
@@ -40,7 +39,7 @@ export async function onRequest(context: { request: Request; params: { path?: st
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    return new Response(JSON.stringify({ error: "Cloudflare Edge Proxy Error", details: errorMsg }), {
+    return new Response(JSON.stringify({ error: "Cloudflare Proxy Error", details: errorMsg }), {
       status: 500,
       headers: {
         "Content-Type": "application/json",
@@ -48,4 +47,20 @@ export async function onRequest(context: { request: Request; params: { path?: st
       },
     });
   }
+}
+
+export async function onRequestPost(context: { request: Request; params: { path?: string[] } }) {
+  return handleAsaasProxy(context.request, context.params.path);
+}
+
+export async function onRequestGet(context: { request: Request; params: { path?: string[] } }) {
+  return handleAsaasProxy(context.request, context.params.path);
+}
+
+export async function onRequestOptions(context: { request: Request; params: { path?: string[] } }) {
+  return handleAsaasProxy(context.request, context.params.path);
+}
+
+export async function onRequest(context: { request: Request; params: { path?: string[] } }) {
+  return handleAsaasProxy(context.request, context.params.path);
 }

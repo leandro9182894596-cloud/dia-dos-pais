@@ -29,7 +29,6 @@ export const PRODUCTION_ASAAS_API_KEY =
 export const DEFAULT_PIX_KEY = "53a880a5-8fcf-4eec-a99f-93e7a60f68bf";
 
 const ASAAS_SANDBOX_URL = "https://sandbox.asaas.com/api/v3";
-// Uses Netlify serverless proxy /api/asaas on live domain to bypass browser CORS policies completely
 const ASAAS_PRODUCTION_URL =
   typeof window !== "undefined" && window.location.hostname !== "localhost"
     ? "/api/asaas"
@@ -82,7 +81,7 @@ export function generatePixPayload(key: string = DEFAULT_PIX_KEY, amount: number
   const merchantName = formatField("59", "HOMENAGEM");
   const merchantCity = formatField("60", "SAO PAULO");
 
-  const txId = formatField("05", "0"); // Fixed static TxID without asterisks to guarantee 100% bank app acceptance
+  const txId = formatField("05", "0"); // Fixed static TxID without asterisks
   const additionalDataField = formatField("62", txId);
 
   const rawPayloadWithoutCRC =
@@ -115,11 +114,14 @@ async function getOrCreateCustomer(name: string, apiKey: string, baseUrl: string
       },
       body: JSON.stringify(bodyData),
     });
-    const data = await res.json();
-    logAsaasApiCall(url, "POST", apiKey, bodyData, res.status, data);
 
-    if (res.ok && data.id) {
-      return data.id;
+    if (res.ok) {
+      const data = await res.json();
+      logAsaasApiCall(url, "POST", apiKey, bodyData, res.status, data);
+      if (data.id) return data.id;
+    } else {
+      const errText = await res.text();
+      logAsaasApiCall(url, "POST", apiKey, bodyData, res.status, errText);
     }
   } catch (e) {
     console.error("[ASAAS API ERROR] Falha na criação de cliente:", e);
@@ -128,7 +130,7 @@ async function getOrCreateCustomer(name: string, apiKey: string, baseUrl: string
 }
 
 /**
- * Creates a Pix Payment order via Asaas Production API using Netlify proxy endpoint.
+ * Creates a Pix Payment order via Asaas Production API using Cloudflare proxy endpoint.
  * Returns exact `encodedImage` and `payload` directly from Asaas without modification.
  */
 export async function createPixPayment(
@@ -162,29 +164,37 @@ export async function createPixPayment(
         body: JSON.stringify(bodyData),
       });
 
-      const paymentData = await res.json();
-      logAsaasApiCall(url, "POST", activeKey, bodyData, res.status, paymentData);
+      if (res.ok) {
+        const paymentData = await res.json();
+        logAsaasApiCall(url, "POST", activeKey, bodyData, res.status, paymentData);
 
-      if (res.ok && paymentData.id) {
-        // 2. Fetch Pix QR Code and Copia e Cola Payload directly from Asaas
-        const qrUrl = `${baseUrl}/payments/${paymentData.id}/pixQrCode`;
-        const qrRes = await fetch(qrUrl, {
-          headers: { access_token: activeKey },
-        });
-        const qrData = await qrRes.json();
-        logAsaasApiCall(qrUrl, "GET", activeKey, null, qrRes.status, qrData);
+        if (paymentData.id) {
+          // 2. Fetch Pix QR Code and Copia e Cola Payload directly from Asaas
+          const qrUrl = `${baseUrl}/payments/${paymentData.id}/pixQrCode`;
+          const qrRes = await fetch(qrUrl, {
+            headers: { access_token: activeKey },
+          });
 
-        if (qrRes.ok && qrData.encodedImage) {
-          return {
-            id: paymentData.id,
-            status: paymentData.status || "PENDING",
-            value: price,
-            pixQrCodeBase64: qrData.encodedImage, // Exact encodedImage from Asaas API
-            pixCopiaECola: qrData.payload, // Exact payload from Asaas API
-            expirationDate: paymentData.dueDate || qrData.expirationDate,
-            apiSuccess: true,
-          };
+          if (qrRes.ok) {
+            const qrData = await qrRes.json();
+            logAsaasApiCall(qrUrl, "GET", activeKey, null, qrRes.status, qrData);
+
+            if (qrData.encodedImage) {
+              return {
+                id: paymentData.id,
+                status: paymentData.status || "PENDING",
+                value: price,
+                pixQrCodeBase64: qrData.encodedImage, // Exact encodedImage from Asaas API
+                pixCopiaECola: qrData.payload, // Exact payload from Asaas API
+                expirationDate: paymentData.dueDate || qrData.expirationDate,
+                apiSuccess: true,
+              };
+            }
+          }
         }
+      } else {
+        const errText = await res.text();
+        logAsaasApiCall(url, "POST", activeKey, bodyData, res.status, errText);
       }
     } catch (err) {
       console.error("[ASAAS API EXCEPTION]:", err);
@@ -204,12 +214,12 @@ export async function createPixPayment(
     pixCopiaECola: copiaECola,
     expirationDate: new Date(Date.now() + 15 * 60 * 1000).toLocaleTimeString("pt-BR"),
     apiSuccess: false,
-    errorMessage: "CORS ou chave inválida. Foi utilizado o Pix Bacen direto sem asteriscos.",
+    errorMessage: "Servidor proxy do Cloudflare em ajuste. Foi utilizado o Pix Bacen direto.",
   };
 }
 
 /**
- * Checks payment status in Asaas Production API via Netlify Proxy.
+ * Checks payment status in Asaas Production API via Proxy.
  */
 export async function checkPaymentStatus(
   paymentId: string,
@@ -227,10 +237,9 @@ export async function checkPaymentStatus(
     const res = await fetch(url, {
       headers: { access_token: activeKey },
     });
-    const data = await res.json();
-    logAsaasApiCall(url, "GET", activeKey, null, res.status, data);
-
-    if (res.ok && data.status) {
+    if (res.ok) {
+      const data = await res.json();
+      logAsaasApiCall(url, "GET", activeKey, null, res.status, data);
       return data.status;
     }
   } catch (err) {

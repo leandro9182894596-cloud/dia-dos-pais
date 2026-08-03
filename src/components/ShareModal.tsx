@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface ShareModalProps {
   url: string;
@@ -8,59 +8,38 @@ interface ShareModalProps {
 
 export function ShareModal({ url, partnerName, onClose }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
-  const [displayUrl, setDisplayUrl] = useState(url);
-  const [shortening, setShortening] = useState(false);
-  const [isShortened, setIsShortened] = useState(false);
-
-  // Automatically attempt shortening via TinyURL API for maximum convenience
-  useEffect(() => {
-    let isMounted = true;
-
-    async function shortenUrl() {
-      setShortening(true);
-      try {
-        const response = await fetch(
-          `https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`
-        );
-        if (response.ok && isMounted) {
-          const tinyUrl = await response.text();
-          if (tinyUrl && tinyUrl.startsWith("http")) {
-            setDisplayUrl(tinyUrl.trim());
-            setIsShortened(true);
-          }
-        }
-      } catch (err) {
-        console.warn("Nao foi possivel encurtar via TinyURL, usando URL limpa:", err);
-      } finally {
-        if (isMounted) setShortening(false);
-      }
-    }
-
-    shortenUrl();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [url]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(displayUrl);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url);
+      } else {
+        const input = document.createElement("input");
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+      }
+    } catch {
+      // fallback if clipboard API fails
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
   };
 
   const whatsappMessage = encodeURIComponent(
-    `Fiz uma surpresa romântica especial para você, ${partnerName}! ♥\nAcesse antes que expire em 24 horas:\n${displayUrl}`
+    `Fiz uma surpresa romântica especial para você, ${partnerName}! ♥\nAcesse antes que expire em 24 horas:\n${url}`
   );
 
   const whatsappUrl = `https://api.whatsapp.com/send?text=${whatsappMessage}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm animate-fade-in pointer-events-auto">
       <div className="relative w-full max-w-lg rounded-3xl bg-card p-6 sm:p-8 shadow-2xl border border-gold/30">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-2xl font-bold"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-2xl font-bold cursor-pointer"
           aria-label="Fechar"
         >
           ×
@@ -87,22 +66,20 @@ export function ShareModal({ url, partnerName, onClose }: ShareModalProps) {
         <div className="mt-6 space-y-4 font-serif">
           {/* Link Box */}
           <div>
-            <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-              <span>Link Curto Compartilhável:</span>
-              {shortening && <span className="animate-pulse text-rose font-sans">Gerando link curto...</span>}
-              {isShortened && <span className="text-green-600 font-sans font-semibold">✓ Link Curto Ativo</span>}
-            </div>
+            <label className="mb-1 block text-xs text-muted-foreground">
+              Link Direto da Homenagem:
+            </label>
 
             <div className="flex items-center gap-2 rounded-2xl bg-secondary p-2 border border-border">
               <input
                 type="text"
                 readOnly
-                value={displayUrl}
-                className="w-full bg-transparent px-3 text-xs font-mono text-foreground focus:outline-none"
+                value={url}
+                className="w-full bg-transparent px-3 text-xs font-mono text-foreground focus:outline-none select-all"
               />
               <button
                 onClick={handleCopy}
-                className="shrink-0 rounded-xl bg-rose px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-rose-foreground hover:opacity-90 active:scale-95 transition-all"
+                className="shrink-0 rounded-xl bg-rose px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-rose-foreground hover:opacity-90 active:scale-95 transition-all cursor-pointer"
               >
                 {copied ? "Copiado! ✓" : "Copiar"}
               </button>
@@ -119,7 +96,7 @@ export function ShareModal({ url, partnerName, onClose }: ShareModalProps) {
           </a>
 
           <a
-            href={displayUrl}
+            href={url}
             target="_blank"
             rel="noopener noreferrer"
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose bg-rose/10 px-5 py-3 text-sm font-semibold text-rose transition-colors hover:bg-rose/20"

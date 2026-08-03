@@ -79,7 +79,7 @@ async function createCustomer(name: string): Promise<string> {
  */
 export async function createPixPayment(
   clientName: string,
-  price: number = 5.99
+  price: number = 9.99
 ): Promise<AsaasPaymentOrder> {
   try {
     // 1. Criar Cliente

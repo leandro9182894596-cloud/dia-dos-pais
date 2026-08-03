@@ -466,12 +466,12 @@ export function CreatorForm() {
         </div>
       )}
 
-      {/* Payment Checkout Modal (Asaas Pix R$ 5,99) */}
+      {/* Payment Checkout Modal (Asaas Pix R$ 9,99) */}
       {showPaymentModal && (
         <PaymentModal
           clientName={clientNameRef.current?.value || "Cliente"}
           partnerName={partnerNameForShare || "Parceiro(a)"}
-          price={5.99}
+          price={9.99}
           onPaymentApproved={handlePaymentApproved}
           onClose={() => setShowPaymentModal(false)}
         />

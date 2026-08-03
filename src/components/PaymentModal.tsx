@@ -16,7 +16,7 @@ interface PaymentModalProps {
 export function PaymentModal({
   clientName,
   partnerName,
-  price = 5.99,
+  price = 9.99,
   onPaymentApproved,
   onClose,
 }: PaymentModalProps) {

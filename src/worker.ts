@@ -29,6 +29,7 @@ export default {
         const headers = new Headers();
         headers.set("Content-Type", "application/json");
         headers.set("Accept", "application/json");
+        headers.set("User-Agent", "Amor24h/1.0 (hello-mate-den; Cloudflare Workers)");
         
         if (env.ASAAS_API_KEY) {
           headers.set("access_token", env.ASAAS_API_KEY);

@@ -4,9 +4,10 @@ interface NarratorProps {
   text: string;
   senderName?: string;
   recipientName?: string;
+  onPlayingChange?: (isPlaying: boolean) => void;
 }
 
-export function Narrator({ text, senderName, recipientName }: NarratorProps) {
+export function Narrator({ text, senderName, recipientName, onPlayingChange }: NarratorProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [supported, setSupported] = useState(false);
@@ -86,12 +87,14 @@ export function Narrator({ text, senderName, recipientName }: NarratorProps) {
     utterance.onstart = () => {
       setIsPlaying(true);
       setIsPaused(false);
+      onPlayingChange?.(true);
       startProgressTimer(estimatedMs);
     };
 
     utterance.onend = () => {
       setIsPlaying(false);
       setIsPaused(false);
+      onPlayingChange?.(false);
       setProgress(100);
       if (intervalRef.current) clearInterval(intervalRef.current);
       setTimeout(() => setProgress(0), 1500);
@@ -100,6 +103,7 @@ export function Narrator({ text, senderName, recipientName }: NarratorProps) {
     utterance.onerror = () => {
       setIsPlaying(false);
       setIsPaused(false);
+      onPlayingChange?.(false);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
 
@@ -112,8 +116,8 @@ export function Narrator({ text, senderName, recipientName }: NarratorProps) {
     window.speechSynthesis.pause();
     setIsPaused(true);
     setIsPlaying(false);
+    onPlayingChange?.(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
-    // guarda o tempo decorrido para retomar o progresso
     const elapsed = Date.now() - startTimeRef.current;
     startTimeRef.current = Date.now() - elapsed;
   };
@@ -123,6 +127,7 @@ export function Narrator({ text, senderName, recipientName }: NarratorProps) {
     window.speechSynthesis.cancel();
     setIsPlaying(false);
     setIsPaused(false);
+    onPlayingChange?.(false);
     setProgress(0);
     if (intervalRef.current) clearInterval(intervalRef.current);
   };

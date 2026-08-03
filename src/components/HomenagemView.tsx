@@ -83,6 +83,7 @@ function LifeCounter({ startDateStr }: { startDateStr: string }) {
 export function HomenagemView({ data, isPreview = false }: HomenagemViewProps) {
   const [expired, setExpired] = useState(() => (!isPreview ? isHomenagemExpired(data.createdAt) : false));
   const [startMusic, setStartMusic] = useState(false);
+  const [narratorActive, setNarratorActive] = useState(false);
 
   if (expired) {
     return <ExpiredPage />;
@@ -106,7 +107,7 @@ export function HomenagemView({ data, isPreview = false }: HomenagemViewProps) {
             photos={data.photos}
             onOpenGift={() => setStartMusic(true)}
           />
-          <MusicPlayer musicUrl={data.musicUrl} autoPlayTrigger={startMusic} />
+          <MusicPlayer musicUrl={data.musicUrl} autoPlayTrigger={startMusic} ducked={narratorActive} />
         </>
       )}
 
@@ -173,6 +174,7 @@ export function HomenagemView({ data, isPreview = false }: HomenagemViewProps) {
             text={data.letterBody}
             senderName={data.clientName}
             recipientName={data.partnerName}
+            onPlayingChange={setNarratorActive}
           />
         </div>
       </section>

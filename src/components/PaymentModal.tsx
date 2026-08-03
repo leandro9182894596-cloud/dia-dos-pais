@@ -19,7 +19,7 @@ interface PaymentModalProps {
 export function PaymentModal({
   clientName,
   partnerName,
-  price = 9.90,
+  price = 0.10,
   asaasApiKey = PRODUCTION_ASAAS_API_KEY,
   onPaymentApproved,
   onClose,

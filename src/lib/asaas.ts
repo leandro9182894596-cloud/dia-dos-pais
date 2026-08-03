@@ -1,7 +1,7 @@
 export interface AsaasPaymentConfig {
   apiKey?: string;
   environment: "sandbox" | "production";
-  price: number; // Price in BRL (e.g., 9.90)
+  price: number; // Price in BRL (e.g., 0.10)
 }
 
 export interface AsaasPaymentOrder {
@@ -55,7 +55,7 @@ async function getOrCreateCustomer(name: string, apiKey: string, baseUrl: string
  */
 export async function createPixPayment(
   clientName: string,
-  price: number = 9.90,
+  price: number = 0.10,
   apiKey: string = PRODUCTION_ASAAS_API_KEY,
   environment: "sandbox" | "production" = "production"
 ): Promise<AsaasPaymentOrder> {

@@ -33,7 +33,7 @@ function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
 
-function LifeCounter({ startDateStr }: { startDateStr: string }) {
+function RelationshipCountdown({ startDateStr }: { startDateStr: string }) {
   const startDate = new Date(startDateStr);
   const [elapsed, setElapsed] = useState<TimeElapsed | null>(null);
 
@@ -48,7 +48,7 @@ function LifeCounter({ startDateStr }: { startDateStr: string }) {
   if (!elapsed) {
     return (
       <div className="flex items-center justify-center py-6">
-        <span className="text-cream/60 font-serif text-lg">Calculando tempo...</span>
+        <span className="text-wine/60 font-serif text-lg">Carregando tempo...</span>
       </div>
     );
   }
@@ -65,12 +65,12 @@ function LifeCounter({ startDateStr }: { startDateStr: string }) {
       {units.map((unit) => (
         <div
           key={unit.label}
-          className="flex flex-col items-center rounded-2xl bg-cream/20 p-4 backdrop-blur-sm shadow-md border border-gold/20"
+          className="flex flex-col items-center rounded-2xl bg-cream/60 p-4 backdrop-blur-sm shadow-md"
         >
-          <span className="font-serif text-3xl font-semibold text-gold sm:text-4xl drop-shadow-md">
+          <span className="font-serif text-3xl font-semibold text-wine sm:text-4xl">
             {pad(unit.value)}
           </span>
-          <span className="mt-1 text-xs font-medium uppercase tracking-widest text-cream/80">
+          <span className="mt-1 text-xs font-medium uppercase tracking-widest text-wine/70">
             {unit.label}
           </span>
         </div>
@@ -118,42 +118,35 @@ export function HomenagemView({ data, isPreview = false }: HomenagemViewProps) {
             className="h-full w-full object-cover"
             fetchPriority="high"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-wine/70 via-wine/40 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-wine/50 via-wine/30 to-background" />
         </div>
 
         <div className="relative z-10 mx-auto w-full max-w-4xl px-6 text-center">
           <p className="mb-4 font-serif text-sm font-medium uppercase tracking-[0.3em] text-cream/90">
-            🏅 Uma homenagem especial para
+            Nossa história começou em
           </p>
           <h1 className="font-serif text-5xl font-semibold text-cream sm:text-7xl md:text-8xl drop-shadow-md">
-            {data.partnerName}
+            {data.clientName} <span className="text-gold">&</span> {data.partnerName}
           </h1>
-          <p className="mx-auto mt-4 max-w-lg font-serif text-lg italic text-cream/80">
-            de {data.clientName}
-          </p>
-          <p className="mx-auto mt-3 max-w-xl font-serif text-xl italic text-cream/90 sm:text-2xl">
-            Nascido em {formattedDate} — cada dia ao seu lado é um presente inestimável.
+          <p className="mx-auto mt-6 max-w-xl font-serif text-xl italic text-cream/90 sm:text-2xl">
+            Desde {formattedDate}, cada segundo ao seu lado é um presente inestimável.
           </p>
 
-          {/* Contador de vida */}
-          <div className="mx-auto mt-6 max-w-xl">
-            <p className="mb-4 text-xs uppercase tracking-widest text-cream/60 font-medium">
-              Tempo de vida juntos
-            </p>
-            <LifeCounter startDateStr={data.startDate} />
+          <div className="mx-auto mt-10 max-w-2xl">
+            <RelationshipCountdown startDateStr={data.startDate} />
           </div>
         </div>
       </section>
 
-      {/* Carta para o Pai */}
+      {/* Letter */}
       <section className="mx-auto max-w-3xl px-6 py-20 sm:py-28">
         <div className="relative rounded-3xl bg-card p-8 shadow-xl shadow-wine/5 sm:p-12 border border-wine/10">
           <div className="absolute -top-5 left-1/2 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full bg-rose text-rose-foreground text-2xl shadow-md">
-            🏅
+            ♥
           </div>
 
           <h2 className="mb-8 text-center font-serif text-3xl font-semibold text-foreground sm:text-4xl">
-            Carta para o Meu Pai
+            Carta de Amor
           </h2>
 
           <div className="space-y-6 font-serif text-lg leading-relaxed text-foreground/90 sm:text-xl whitespace-pre-line">
@@ -169,7 +162,7 @@ export function HomenagemView({ data, isPreview = false }: HomenagemViewProps) {
         </div>
       </section>
 
-      {/* Galeria de Momentos */}
+      {/* Moments Gallery */}
       {data.photos.length > 0 && (
         <section className="bg-secondary/30 px-6 py-20 sm:py-28">
           <div className="mx-auto max-w-6xl">
@@ -178,10 +171,10 @@ export function HomenagemView({ data, isPreview = false }: HomenagemViewProps) {
                 Memórias Inesquecíveis
               </p>
               <h2 className="font-serif text-3xl font-semibold text-foreground sm:text-4xl">
-                Momentos com o Pai
+                Nossos Momentos
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-                Cada foto guarda um pedacinho da nossa história juntos.
+                Cada foto guarda um pedacinho da nossa caminhada juntos.
               </p>
             </div>
 
@@ -215,19 +208,15 @@ export function HomenagemView({ data, isPreview = false }: HomenagemViewProps) {
       )}
 
       {/* Footer */}
-      <footer className="bg-wine px-6 py-14 text-center text-wine-foreground">
-        <span className="text-4xl">🏅</span>
-        <p className="font-serif text-2xl font-semibold sm:text-3xl mt-4">
-          Para <span className="text-gold">{data.partnerName}</span>
+      <footer className="bg-wine px-6 py-12 text-center text-wine-foreground">
+        <p className="font-serif text-2xl font-semibold sm:text-3xl">
+          {data.clientName} <span className="text-gold">&</span> {data.partnerName}
         </p>
         <p className="mx-auto mt-3 max-w-md font-serif text-wine-foreground/80">
-          "Um pai não é apenas alguém que te dá a vida — é quem te ensina a vivê-la."
+          "O amor não se vê, se sente. E eu sinto o seu em cada batida do meu coração."
         </p>
-        <p className="mt-3 font-serif text-sm text-wine-foreground/60 italic">
-          Com amor de {data.clientName}
-        </p>
-        <p className="mt-8 text-xs uppercase tracking-widest text-wine-foreground/50">
-          Homenagem com Validade de 24 Horas · Feito com ❤️ para o Dia dos Pais
+        <p className="mt-8 text-xs uppercase tracking-widest text-wine-foreground/60">
+          Homenagem com Validade de 24 Horas · Feito com Amor
         </p>
       </footer>
     </main>

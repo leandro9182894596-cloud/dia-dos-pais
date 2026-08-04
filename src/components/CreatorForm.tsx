@@ -9,7 +9,7 @@ import { ShareModal } from "./ShareModal";
 import { PaymentModal } from "./PaymentModal";
 import { HomenagemView } from "./HomenagemView";
 
-const DEFAULT_LETTER = `Pai, há palavras que carregamos dentro do coração por anos, esperando o momento certo para dizer. Hoje é esse momento.\n\nDesde criança, você foi o meu maior exemplo. Vi em você a força de quem não desiste, a sabedoria de quem aprende com o tempo e a ternura de quem ama sem precisar de motivo. Você me ensinou mais do que qualquer livro poderia — me ensinou a ser quem eu sou.\n\nObrigado por cada abraço quando eu precisava, por cada conselho que fez diferença, e por cada momento em que você simplesmente esteve lá. Ter você como pai é um presente que eu recebo todos os dias.\n\nFeliz Dia dos Pais. Eu te amo mais do que as palavras conseguem dizer.`;
+const DEFAULT_LETTER = `Desde o dia em que nos conhecemos, a minha vida ganhou uma nova cor. Você chegou como quem não avisa, mas como quem estava destinado a ficar. Cada dia ao seu lado me ensina que o amor não é apenas um sentimento, é uma escolha que eu faço todos os dias — e eu escolho você.\n\nObrigado por ser minha parceira, minha amiga, minha paz e o meu maior amor. Que venham muitos mais dias, meses e anos de nós dois.`;
 
 interface PhotoItemProps {
   foto: HomenagemFoto;
@@ -59,7 +59,7 @@ const PhotoItem = memo(function PhotoItem({
               type="text"
               defaultValue={foto.caption}
               onBlur={(e) => onCaptionChange(foto.id, e.target.value)}
-              placeholder="Ex: Meu maior herói"
+              placeholder="Ex: Nosso primeiro encontro"
               className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose font-medium pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
@@ -74,7 +74,7 @@ const PhotoItem = memo(function PhotoItem({
               rows={2}
               defaultValue={foto.mensagem || ""}
               onBlur={(e) => onMensagemChange(foto.id, e.target.value)}
-              placeholder="Escreva uma memória especial com o seu pai..."
+              placeholder="Escreva uma mensagem ou lembrança para esta foto..."
               className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground font-sans focus:outline-none focus:ring-1 focus:ring-rose leading-relaxed pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
@@ -87,6 +87,8 @@ const PhotoItem = memo(function PhotoItem({
 export function CreatorForm() {
   const clientNameRef = useRef<HTMLInputElement>(null);
   const partnerNameRef = useRef<HTMLInputElement>(null);
+  const startDateRef = useRef<HTMLInputElement>(null);
+  const startTimeRef = useRef<HTMLInputElement>(null);
   const letterBodyRef = useRef<HTMLTextAreaElement>(null);
 
   const [photos, setPhotos] = useState<HomenagemFoto[]>([]);
@@ -118,8 +120,8 @@ export function CreatorForm() {
         newPhotos.push({
           id: Math.random().toString(36).substring(2, 9),
           src: compressedBase64,
-          caption: `Com o Pai #${photos.length + i + 1}`,
-          mensagem: "Uma memória que guardo com carinho.",
+          caption: `Nosso momento #${photos.length + i + 1}`,
+          mensagem: "Um dia inesquecível ao seu lado.",
         });
       }
       setPhotos((prev) => [...prev, ...newPhotos].slice(0, 10));
@@ -166,14 +168,17 @@ export function CreatorForm() {
   }, []);
 
   const getFormData = (): Omit<HomenagemData, "id" | "createdAt"> => {
-    const clientName = clientNameRef.current?.value.trim() || "Filho(a)";
-    const partnerName = partnerNameRef.current?.value.trim() || "Meu Pai";
+    const clientName = clientNameRef.current?.value.trim() || "Você";
+    const partnerName = partnerNameRef.current?.value.trim() || "Seu Amor";
+    const startDate = startDateRef.current?.value || "2025-09-06";
+    const startTime = startTimeRef.current?.value || "00:00";
     const letterBody = letterBodyRef.current?.value || DEFAULT_LETTER;
 
+    const fullStartDate = `${startDate}T${startTime}:00`;
     return {
       clientName,
       partnerName,
-      startDate: new Date().toISOString(),
+      startDate: fullStartDate,
       letterBody,
       photos,
       musicUrl,
@@ -185,7 +190,7 @@ export function CreatorForm() {
     const partnerName = partnerNameRef.current?.value.trim();
 
     if (!clientName || !partnerName) {
-      alert("Por favor, informe o seu nome e o nome do seu pai antes de visualizar.");
+      alert("Por favor, informe o seu nome e o nome do seu parceiro(a) antes de visualizar.");
       return;
     }
 
@@ -203,7 +208,7 @@ export function CreatorForm() {
     const partnerName = partnerNameRef.current?.value.trim();
 
     if (!clientName || !partnerName) {
-      alert("Por favor, informe o seu nome e o nome do seu pai.");
+      alert("Por favor, informe o seu nome e o nome do seu parceiro(a).");
       return;
     }
 
@@ -226,10 +231,10 @@ export function CreatorForm() {
     <div className="relative z-10 mx-auto max-w-3xl rounded-3xl bg-card p-6 shadow-2xl border border-wine/10 sm:p-10 pointer-events-auto">
       <div className="mb-8 text-center">
         <span className="inline-block rounded-full bg-rose/10 px-4 py-1.5 font-serif text-xs font-semibold uppercase tracking-widest text-rose">
-          🏅 Criador de Homenagem · Dia dos Pais
+          Criador de Homenagem
         </span>
         <h2 className="mt-3 font-serif text-3xl font-bold text-foreground sm:text-4xl">
-          Monte a Homenagem para o Seu Pai
+          Monte o Site do Seu Amor
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Preencha os dados abaixo. O link gerado será exclusivo e terá validade de <strong>24 horas</strong>.
@@ -241,7 +246,7 @@ export function CreatorForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="clientName" className="mb-1.5 block text-sm font-medium text-foreground">
-              Seu Nome (Filho/a):
+              Seu Nome:
             </label>
             <input
               id="clientName"
@@ -258,7 +263,7 @@ export function CreatorForm() {
 
           <div>
             <label htmlFor="partnerName" className="mb-1.5 block text-sm font-medium text-foreground">
-              Nome do Seu Pai:
+              Nome do Seu Amor (Parceiro/a):
             </label>
             <input
               id="partnerName"
@@ -268,35 +273,66 @@ export function CreatorForm() {
               required
               autoComplete="off"
               defaultValue=""
-              placeholder="Ex: José"
+              placeholder="Ex: Wanda"
               className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
             />
           </div>
         </div>
 
+        {/* Data do relacionamento */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="startDate" className="mb-1.5 block text-sm font-medium text-foreground">
+              Data de Início do Relacionamento:
+            </label>
+            <input
+              id="startDate"
+              name="startDate"
+              ref={startDateRef}
+              type="date"
+              required
+              defaultValue="2025-09-06"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
+            />
+          </div>
 
-        {/* Mensagem para o Pai */}
+          <div>
+            <label htmlFor="startTime" className="mb-1.5 block text-sm font-medium text-foreground">
+              Horário (Opcional):
+            </label>
+            <input
+              id="startTime"
+              name="startTime"
+              ref={startTimeRef}
+              type="time"
+              defaultValue="00:00"
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-base text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
+            />
+          </div>
+        </div>
+
+        {/* Carta de Amor */}
         <div>
           <label htmlFor="letterBody" className="mb-1.5 block text-sm font-medium text-foreground">
-            Sua Mensagem para o Pai:
+            Sua Carta de Amor:
           </label>
           <textarea
             id="letterBody"
             name="letterBody"
             ref={letterBodyRef}
-            rows={6}
+            rows={5}
             defaultValue={DEFAULT_LETTER}
             className="w-full rounded-2xl border border-input bg-background p-4 text-base leading-relaxed text-foreground font-sans shadow-sm focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/30 pointer-events-auto select-text cursor-text relative z-10"
           />
         </div>
 
-        {/* Upload de Música */}
+        {/* Upload de Música Personalizada */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Música Especial do Pai (Opcional):
+            Música Especial do Casal (Opcional):
           </label>
           <p className="mb-2 text-xs text-muted-foreground">
-            Escolha uma música que lembre seu pai, ou deixe em branco para usar nossa trilha emocionante padrão.
+            Se deixar sem arquivo, usaremos a música romântica padrão (John Legend - All of Me).
           </p>
 
           {!musicFileName ? (
@@ -331,7 +367,7 @@ export function CreatorForm() {
         <div>
           <div className="mb-2 flex items-center justify-between">
             <label className="text-sm font-medium text-foreground">
-              Fotos com o Seu Pai ({photos.length}/10 no máximo):
+              Fotos dos Seus Momentos ({photos.length}/10 no máximo):
             </label>
             <span className="text-xs text-muted-foreground">
               Formato JPG/PNG/WebP
@@ -342,7 +378,7 @@ export function CreatorForm() {
             <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-rose/40 bg-rose/5 p-6 text-center transition-colors hover:bg-rose/10 pointer-events-auto relative z-10">
               <span className="text-3xl mb-1">📷</span>
               <span className="text-sm font-semibold text-rose">
-                {uploading ? "Carregando fotos..." : "Clique para adicionar fotos com o pai"}
+                {uploading ? "Carregando fotos..." : "Clique para adicionar fotos do casal"}
               </span>
               <span className="mt-1 text-xs text-muted-foreground">
                 Selecione até {10 - photos.length} fotos extras
@@ -390,7 +426,7 @@ export function CreatorForm() {
             onClick={handleInitiateCheckout}
             className="flex items-center justify-center gap-2 rounded-full bg-rose py-3.5 text-sm font-semibold uppercase tracking-wider text-rose-foreground shadow-xl transition-all hover:scale-[1.02] active:scale-95 cursor-pointer pointer-events-auto relative z-10"
           >
-            <span>💳</span> Gerar Link via Pix (R$ 9,99)
+            <span>💳</span> Gerar Link via Pix (R$ 0,10)
           </button>
         </div>
       </form>
@@ -419,9 +455,9 @@ export function CreatorForm() {
               <button
                 type="button"
                 onClick={handleInitiateCheckout}
-                className="rounded-full bg-rose px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-rose-foreground shadow-md hover:scale-105 transition-transform cursor-pointer"
+                className="rounded-full bg-rose px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md hover:scale-105 transition-transform cursor-pointer"
               >
-                💳 Pagar & Gerar Link (R$ 9,99)
+                💳 Pagar & Gerar Link (R$ 0,10)
               </button>
             </div>
           </div>
@@ -434,7 +470,7 @@ export function CreatorForm() {
       {showPaymentModal && (
         <PaymentModal
           clientName={clientNameRef.current?.value || "Cliente"}
-          partnerName={partnerNameForShare || "Pai"}
+          partnerName={partnerNameForShare || "Parceiro(a)"}
           price={9.99}
           onPaymentApproved={handlePaymentApproved}
           onClose={() => setShowPaymentModal(false)}
@@ -445,7 +481,7 @@ export function CreatorForm() {
       {createdUrl && (
         <ShareModal
           url={createdUrl}
-          partnerName={partnerNameForShare || "seu pai"}
+          partnerName={partnerNameForShare || "seu parceiro"}
           onClose={() => setCreatedUrl(null)}
         />
       )}

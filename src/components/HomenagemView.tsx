@@ -3,7 +3,6 @@ import { GiftReveal } from "./GiftReveal";
 import { MusicPlayer } from "./MusicPlayer";
 import { ExpirationBanner } from "./ExpirationBanner";
 import { ExpiredPage } from "./ExpiredPage";
-import { Narrator } from "./Narrator";
 import { isHomenagemExpired, type HomenagemData } from "../lib/storage";
 
 interface HomenagemViewProps {
@@ -167,13 +166,6 @@ export function HomenagemView({ data, isPreview = false }: HomenagemViewProps) {
               <span className="font-semibold">{data.clientName}</span>
             </p>
           </div>
-
-          {/* Narrador de voz */}
-          <Narrator
-            text={data.letterBody}
-            senderName={data.clientName}
-            recipientName={data.partnerName}
-          />
         </div>
       </section>
 

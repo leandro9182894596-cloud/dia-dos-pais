@@ -426,7 +426,7 @@ export function CreatorForm() {
             onClick={handleInitiateCheckout}
             className="flex items-center justify-center gap-2 rounded-full bg-rose py-3.5 text-sm font-semibold uppercase tracking-wider text-rose-foreground shadow-xl transition-all hover:scale-[1.02] active:scale-95 cursor-pointer pointer-events-auto relative z-10"
           >
-            <span>💳</span> Gerar Link via Pix (R$ 0,10)
+            <span>💳</span> Gerar Link via Pix (R$ 5,09)
           </button>
         </div>
       </form>
@@ -457,7 +457,7 @@ export function CreatorForm() {
                 onClick={handleInitiateCheckout}
                 className="rounded-full bg-rose px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md hover:scale-105 transition-transform cursor-pointer"
               >
-                💳 Pagar & Gerar Link (R$ 0,10)
+                💳 Pagar & Gerar Link (R$ 5,09)
               </button>
             </div>
           </div>
@@ -466,12 +466,12 @@ export function CreatorForm() {
         </div>
       )}
 
-      {/* Payment Checkout Modal (Asaas Pix R$ 9,99) */}
+      {/* Payment Checkout Modal (Asaas Pix R$ 5,09) */}
       {showPaymentModal && (
         <PaymentModal
           clientName={clientNameRef.current?.value || "Cliente"}
           partnerName={partnerNameForShare || "Parceiro(a)"}
-          price={9.99}
+          price={5.09}
           onPaymentApproved={handlePaymentApproved}
           onClose={() => setShowPaymentModal(false)}
         />
